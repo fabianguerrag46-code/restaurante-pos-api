@@ -1,0 +1,126 @@
+const express = require('express');
+const cors = require('cors');
+const { Pool } = require('pg');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Conexión con PostgreSQL en Render
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' || process.env.DATABASE_URL?.includes('render.com') 
+    ? { rejectUnauthorized: false } 
+    : false
+});
+
+app.use(cors());
+app.use(express.json());
+
+// Crear tablas si no existen
+async function initDB() {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS productos (
+        id SERIAL PRIMARY KEY,
+        nombre VARCHAR(100) NOT NULL,
+        categoria VARCHAR(50),
+        precio NUMERIC(10, 2) NOT NULL,
+        stock INT DEFAULT 0,
+        creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS pedidos (
+        id SERIAL PRIMARY KEY,
+        mesa VARCHAR(20) NOT NULL,
+        total NUMERIC(10, 2) NOT NULL,
+        estado VARCHAR(20) DEFAULT 'pendiente',
+        creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    console.log('✅ Tablas listas en PostgreSQL');
+  } catch (err) {
+    console.error('❌ Error al crear tablas:', err.message);
+  }
+}
+initDB();
+
+// Pantalla principal visual
+app.get('/', async (req, res) => {
+  let dbStatus = 'Desconectada';
+  let totalProductos = 0;
+
+  try {
+    const dbTest = await pool.query('SELECT NOW()');
+    if (dbTest.rows.length > 0) {
+      dbStatus = 'Conectada exitosamente';
+    }
+    const countRes = await pool.query('SELECT COUNT(*) FROM productos');
+    totalProductos = countRes.rows[0].count;
+  } catch (err) {
+    dbStatus = 'Error: ' + err.message;
+  }
+
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Restaurante POS - Conectado</title>
+      <style>
+        body { font-family: system-ui, sans-serif; background: #0f172a; color: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+        .card { background: #1e293b; padding: 2rem; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); max-width: 520px; width: 90%; }
+        .badge { display: inline-block; background: #22c55e; color: #022c22; padding: 0.35rem 0.8rem; border-radius: 20px; font-weight: 700; font-size: 0.85rem; margin-bottom: 1rem; }
+        h1 { margin: 0 0 0.5rem; font-size: 1.6rem; color: #f1f5f9; }
+        p { color: #94a3b8; font-size: 0.95rem; margin-bottom: 1.5rem; }
+        .info-box { background: #0f172a; border-radius: 8px; padding: 1rem; border: 1px solid #334155; font-size: 0.9rem; line-height: 1.6; }
+        .info-box strong { color: #38bdf8; }
+        .endpoints { margin-top: 1.5rem; }
+        .endpoints a { color: #60a5fa; display: block; margin: 0.4rem 0; font-family: monospace; text-decoration: none; }
+        .endpoints a:hover { text-decoration: underline; }
+      </style>
+    </head>
+    <body>
+      <div class="card">
+        <span class="badge">● Sistema POS Online</span>
+        <h1>Restaurante POS API</h1>
+        <p>Servidor activo y conectado a la base de datos.</p>
+        
+        <div class="info-box">
+          <div><strong>Estado de PostgreSQL:</strong> ${dbStatus}</div>
+          <div><strong>Total de productos en base de datos:</strong> ${totalProductos}</div>
+        </div>
+
+        <div class="endpoints">
+          <strong style="color: #cbd5e1;">Endpoints listos:</strong>
+          <a href="/api/status" target="_blank">GET /api/status</a>
+          <a href="/api/productos" target="_blank">GET /api/productos</a>
+        </div>
+      </div>
+    </body>
+    </html>
+  `);
+});
+
+// Endpoints
+app.get('/api/status', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT NOW() as hora');
+    res.json({ status: 'ok', base_de_datos: 'conectada', hora: result.rows[0].hora });
+  } catch (err) {
+    res.status(500).json({ status: 'error', error: err.message });
+  }
+});
+
+app.get('/api/productos', async (req, res) => {
+  try {
+    const { rows } = await pool.query('SELECT * FROM productos ORDER BY id ASC');
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.listen(PORT, () => {
+  console.log(`Servidor POS escuchando en el puerto ${PORT}`);
+});
