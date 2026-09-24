@@ -272,7 +272,7 @@
     }
     .btn-whatsapp-comprar:active { transform: scale(0.98); }
 
-    /* MODAL DE ADMINISTRACIÓN TOTALMENTE OCULTO */
+    /* MODAL DE ADMINISTRACIÓN TOTALMENTE CIEGO */
     #modal-admin {
       position: fixed;
       inset: 0;
@@ -322,7 +322,7 @@
       <p style="color:var(--muted); font-size:0.85rem; margin:4px 0 18px;">Ingresa tus datos para ordenar</p>
 
       <label class="label-campo">Tu Celular (WhatsApp):</label>
-      <input type="tel" id="reg-telefono" class="input-cliente" placeholder="Ej: 3001234567" inputmode="numeric" oninput="autocompletarSiExiste()">
+      <input type="tel" id="reg-telefono" class="input-cliente" placeholder="Número de celular" inputmode="numeric" oninput="autocompletarSiExiste()">
 
       <label class="label-campo">Tu Nombre Completo:</label>
       <input type="text" id="reg-nombre" class="input-cliente" placeholder="Nombre y Apellido">
@@ -386,10 +386,9 @@
       
       <!-- INGRESO CON ENMASCARAMIENTO ESTRICTO -->
       <div id="sec-clave-admin">
-        <h3 style="font-weight:900; margin-bottom:6px;">Acceso Administrador</h3>
+        <h3 style="font-weight:900; margin-bottom:6px;">Acceso Autorizado</h3>
         <p style="font-size:0.8rem; color:var(--muted); margin-bottom:14px;">Ingresa el código de acceso:</p>
         
-        <!-- Campo password estándar de seguridad sin texto de contraseñas -->
         <input type="password" id="input-admin-pin" class="input-cliente" placeholder="••••" maxlength="8" autocomplete="off" inputmode="numeric" style="text-align:center; font-size:1.8rem; letter-spacing:8px;">
         
         <button onclick="validarPinAdmin()" style="width:100%; padding:13px; background:var(--primary); color:#fff; border:none; border-radius:12px; font-weight:800; cursor:pointer;">
@@ -431,7 +430,6 @@
   </div>
 
   <script>
-    // Variables de verificación interna en memoria
     const KEY_ADM = "9999";
     const KEY_MES = "1234";
 
@@ -530,7 +528,7 @@
         : PLATOS.filter(p => p.cat === categoriaActiva);
 
       if (q) {
-        lista = lista.filter(p => p.name.toLowerCase().includes(q));
+        lista = lista.filter(p => p.name.toLowerCase().includes(querySafe(q)));
       }
 
       lista.forEach(p => {
@@ -566,6 +564,8 @@
 
       actualizarBarraCompraCliente();
     }
+
+    function querySafe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 
     function modificarCantidadPlato(id, delta) {
       const prod = PLATOS.find(p => p.id === id);
@@ -655,7 +655,7 @@
       window.open(urlWhatsApp, '_blank');
     }
 
-    /* ACCESO ADMIN PROTEGIDO */
+    /* ACCESO ADMIN TOTALMENTE ENMASCARADO */
     function pedirClaveAdmin() {
       document.getElementById('sec-clave-admin').style.display = 'block';
       document.getElementById('sec-panel-admin').style.display = 'none';
