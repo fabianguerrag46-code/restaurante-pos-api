@@ -1,1 +1,14 @@
-
+{
+  "name": "restaurante-pos-api",
+  "version": "1.0.0",
+  "description": "POS Las Delicias de Salome",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "pg": "^8.11.5"
+  }
+}
