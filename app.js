@@ -17,7 +17,7 @@ const pool = new Pool({
 app.use(cors());
 app.use(express.json());
 
-// Servir automáticamente todos los archivos dentro de la carpeta 'public'
+// Servir la carpeta public para recursos e imágenes
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Inicializar tablas en PostgreSQL
@@ -43,7 +43,6 @@ async function initDB() {
       );
     `);
 
-    // Asegurar 8 mesas iniciales
     const checkMesas = await pool.query('SELECT COUNT(*) FROM mesas');
     if (parseInt(checkMesas.rows[0].count) === 0) {
       for (let i = 1; i <= 8; i++) {
@@ -57,9 +56,12 @@ async function initDB() {
 }
 initDB();
 
-// --- ENDPOINTS DE LA API ---
+// --- RUTA PRINCIPAL QUE MUESTRA EL HTML ---
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
-// 1. Obtener estado de las mesas
+// --- ENDPOINTS DE LA API ---
 app.get('/api/mesas', async (req, res) => {
   try {
     const { rows } = await pool.query('SELECT id, items FROM mesas ORDER BY id ASC');
@@ -69,7 +71,6 @@ app.get('/api/mesas', async (req, res) => {
   }
 });
 
-// 2. Guardar estado de una mesa
 app.post('/api/mesas', async (req, res) => {
   const { id, items } = req.body;
   try {
@@ -85,7 +86,6 @@ app.post('/api/mesas', async (req, res) => {
   }
 });
 
-// 3. Obtener ventas
 app.get('/api/ventas', async (req, res) => {
   try {
     const { rows } = await pool.query('SELECT * FROM ventas ORDER BY id DESC');
@@ -95,7 +95,6 @@ app.get('/api/ventas', async (req, res) => {
   }
 });
 
-// 4. Registrar nueva venta
 app.post('/api/ventas', async (req, res) => {
   const { fecha, hora, mesaId, items, subtotal, tip, total } = req.body;
   try {
@@ -112,7 +111,6 @@ app.post('/api/ventas', async (req, res) => {
   }
 });
 
-// 5. Reiniciar ventas del día
 app.delete('/api/ventas', async (req, res) => {
   try {
     await pool.query('DELETE FROM ventas');
@@ -122,14 +120,8 @@ app.delete('/api/ventas', async (req, res) => {
   }
 });
 
-// 6. Endpoint de verificación
 app.get('/api/status', (req, res) => {
   res.json({ status: 'ok', servicio: 'Las Delicias de Salomé POS' });
-});
-
-// Si entran a cualquier ruta que no sea /api, entrega el frontend
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.listen(PORT, () => {
