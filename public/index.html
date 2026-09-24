@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Las Delicias de Salomé - POS</title>
+  
+  <!-- Librería SheetJS para generar y descargar archivos Excel reales -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <style>
@@ -41,6 +43,7 @@
       overflow: hidden;
     }
 
+    /* PANTALLA INICIAL DE ACCESO */
     #auth-screen {
       position: fixed;
       inset: 0;
@@ -87,6 +90,7 @@
       box-shadow: 0 2px 8px var(--primary-glow);
     }
 
+    /* HEADER */
     header {
       background: rgba(17, 24, 39, 0.95);
       padding: 12px 16px;
@@ -116,6 +120,7 @@
     .role-chip.mesero { background: rgba(249, 115, 22, 0.2); color: #fb923c; border: 1px solid rgba(249, 115, 22, 0.4); }
     .role-chip.cliente { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
 
+    /* VISTAS */
     .view-container {
       flex: 1;
       overflow-y: auto;
@@ -149,6 +154,7 @@
       outline: none;
     }
 
+    /* MESAS */
     .tables-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(130px, 1fr));
@@ -192,6 +198,7 @@
       margin-top: 6px;
     }
 
+    /* CATEGORÍAS */
     .cat-tabs {
       display: flex;
       gap: 8px;
@@ -216,6 +223,7 @@
       border-color: transparent;
     }
 
+    /* MENÚ */
     .menu-list { display: flex; flex-direction: column; gap: 12px; }
     .menu-card {
       background: var(--card);
@@ -285,6 +293,7 @@
       cursor: pointer;
     }
 
+    /* COMANDA */
     .bill-box {
       background: var(--card);
       border-radius: var(--radius);
@@ -330,11 +339,17 @@
       color: #fff;
       cursor: pointer;
       margin-top: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     }
     .btn-pay { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
-    .btn-print { background: var(--primary-gradient); }
+    .btn-excel { background: linear-gradient(135deg, #059669 0%, #047857 100%); }
+    .btn-whatsapp { background: linear-gradient(135deg, #25d366 0%, #128c7e 100%); color: #fff; }
     .btn-danger { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
 
+    /* CIERRE / ARQUEO */
     .kpi-mobile { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
     .kpi-card {
       background: var(--card);
@@ -345,6 +360,7 @@
     .kpi-label { font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
     .kpi-value { font-size: 1.28rem; font-weight: 900; margin-top: 6px; }
 
+    /* NAVEGACIÓN INFERIOR */
     nav {
       background: rgba(17, 24, 39, 0.92);
       border-top: 1px solid var(--border);
@@ -399,6 +415,7 @@
 </head>
 <body>
 
+  <!-- PANTALLA INICIAL DE ACCESO -->
   <div id="auth-screen">
     <div class="auth-card">
       <div style="font-size:2.8rem; margin-bottom:6px;">🥘</div>
@@ -429,11 +446,12 @@
       <div id="login-form-staff" style="display:none;">
         <label style="font-size:0.75rem; color:var(--text-muted); font-weight:700; display:block; text-align:left; margin-bottom:6px;">INGRESA EL PIN DE ACCESO:</label>
         <input type="password" id="login-pin-staff" class="sheet-input" placeholder="••••" maxlength="6" inputmode="numeric" autocomplete="off" style="text-align:center; font-size:1.6rem; letter-spacing:8px;">
-        <button class="btn-action btn-print" onclick="iniciarSesionStaff()">Entrar al Sistema</button>
+        <button class="btn-action btn-pay" onclick="iniciarSesionStaff()">Entrar al Sistema</button>
       </div>
     </div>
   </div>
 
+  <!-- HEADER -->
   <header>
     <div class="brand-title">
       <span>🥘 Las Delicias de Salomé</span>
@@ -446,6 +464,7 @@
 
   <div id="toast-msg"></div>
 
+  <!-- VISTA 1: MESAS -->
   <div class="view-container" id="view-mesas">
     <div class="section-title">
       <span>Salón Principal</span>
@@ -454,6 +473,7 @@
     <div class="tables-grid" id="tables-grid"></div>
   </div>
 
+  <!-- VISTA 2: MENÚ -->
   <div class="view-container active" id="view-menu">
     <input type="text" id="menu-search-input" class="search-box" placeholder="🔍 Buscar plato..." oninput="renderMenu()">
 
@@ -466,6 +486,7 @@
     <div class="menu-list" id="menu-list"></div>
   </div>
 
+  <!-- VISTA 3: COMANDA (SOLO ADMIN) -->
   <div class="view-container" id="view-comanda">
     <div class="bill-box">
       <h2 id="bill-mesa-title" style="font-size:1.2rem; font-weight:800;">Mesa 1</h2>
@@ -479,17 +500,40 @@
     </div>
   </div>
 
+  <!-- VISTA 4: CIERRE DIARIO Y REPORTES (SOLO ADMIN) -->
   <div class="view-container" id="view-cierre">
-    <div class="section-title">Resumen de Caja Diario</div>
+    <div class="section-title">Resumen de Ventas del Día</div>
+    
     <div class="kpi-mobile">
-      <div class="kpi-card" style="grid-column:span 2;">
-        <div class="kpi-label">Total en Caja</div>
+      <div class="kpi-card">
+        <div class="kpi-label">Ventas Hoy</div>
         <div id="kpi-cobrado" class="kpi-value" style="color:#34d399;">$0</div>
       </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Cuentas Cobradas</div>
+        <div id="kpi-ordenes" class="kpi-value" style="color:#60a5fa;">0</div>
+      </div>
     </div>
-    <button class="btn-action btn-danger" onclick="reiniciarCajaDia()">Reiniciar Caja a $0</button>
+
+    <div style="background:var(--card); padding:16px; border-radius:var(--radius); border:1px solid var(--border); margin-bottom:14px;">
+      <label style="font-size:0.75rem; color:var(--text-muted); font-weight:700; display:block; margin-bottom:6px;">WHATSAPP DE DESTINO (ADMINISTRADOR):</label>
+      <input type="tel" id="admin-whatsapp-input" class="sheet-input" placeholder="Ej: 573001234567" style="margin-bottom:0;">
+    </div>
+
+    <button class="btn-action btn-whatsapp" onclick="enviarReporteWhatsApp()">
+      <span>📲</span> Enviar Resumen al WhatsApp
+    </button>
+
+    <button class="btn-action btn-excel" onclick="descargarExcelVentas()">
+      <span>📊</span> Descargar Ventas en Excel (.xlsx)
+    </button>
+
+    <button class="btn-action btn-danger" onclick="reiniciarCajaDia()" style="margin-top:16px;">
+      <span>🗑️</span> Reiniciar Arqueo del Día a $0
+    </button>
   </div>
 
+  <!-- NAVEGACIÓN INFERIOR -->
   <nav id="bottom-nav">
     <button class="tab-btn" id="tab-nav-mesas" onclick="switchView('mesas')"><span>🪑</span>Mesas</button>
     <button class="tab-btn active" id="tab-nav-menu" onclick="switchView('menu')"><span>📋</span>Menú</button>
@@ -518,7 +562,7 @@
       setTimeout(() => { t.style.display = 'none'; }, 1800);
     }
 
-    // RUTAS RELATIVAS ESTABLES PARA SERVIDOR EN LÍNEA
+    // CATÁLOGO DE PRODUCTOS (RUTAS LOCALES / GITHUB PAGES)
     const MENU_BASE = [
       { 
         id: 1, 
@@ -680,6 +724,8 @@
         tabMesas.style.display = 'flex';
         tabComanda.style.display = 'flex';
         tabCierre.style.display = 'flex';
+        // Cargar teléfono de WhatsApp si fue guardado previamente
+        document.getElementById('admin-whatsapp-input').value = localStorage.getItem("salome_ws_phone") || "";
       }
     }
 
@@ -827,27 +873,119 @@
       if (!m.items.length) return alert('La mesa no tiene consumos.');
       
       const tot = m.items.reduce((a, b) => a + (Number(b.price) * Number(b.qty)), 0);
+      const ahora = new Date();
+      const detalleItems = m.items.map(i => `${i.qty}x ${i.name}`).join(', ');
+
       let ventas = JSON.parse(localStorage.getItem("salome_ventas") || "[]");
-      ventas.push({ total: tot, fecha: new Date().toLocaleDateString() });
+      ventas.push({
+        id: ventas.length + 1,
+        mesa: activeMesa,
+        items: detalleItems,
+        total: tot,
+        fecha: ahora.toLocaleDateString(),
+        hora: ahora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      });
       localStorage.setItem("salome_ventas", JSON.stringify(ventas));
 
       m.items = [];
       localStorage.setItem("salome_mesas", JSON.stringify(mesas));
       renderMesas();
       renderComanda();
-      alert(`Mesa ${activeMesa} cobrada por ${fmt(tot)}`);
+      alert(`Mesa ${activeMesa} cobrada con éxito: ${fmt(tot)}`);
     }
 
     function renderCierre() {
       let ventas = JSON.parse(localStorage.getItem("salome_ventas") || "[]");
       const cobrado = ventas.reduce((a, b) => a + Number(b.total), 0);
       document.getElementById('kpi-cobrado').innerText = fmt(cobrado);
+      document.getElementById('kpi-ordenes').innerText = ventas.length;
+    }
+
+    /* FUNCIÓN 1: NOTIFICACIÓN DE BALANCE POR WHATSAPP */
+    function enviarReporteWhatsApp() {
+      let ventas = JSON.parse(localStorage.getItem("salome_ventas") || "[]");
+      if (ventas.length === 0) {
+        return alert("No hay ventas registradas en el día de hoy.");
+      }
+
+      const inputPhone = document.getElementById('admin-whatsapp-input').value.trim();
+      if (!inputPhone) {
+        return alert("Por favor ingresa el número de WhatsApp con código de país (ejemplo: 573001234567).");
+      }
+      localStorage.setItem("salome_ws_phone", inputPhone);
+
+      const totalVendido = ventas.reduce((a, b) => a + Number(b.total), 0);
+      const fechaHoy = new Date().toLocaleDateString();
+      const horaActual = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      let texto = `*🥘 BALANCE DIARIO - LAS DELICIAS DE SALOMÉ*\n`;
+      texto += `📅 Fecha: ${fechaHoy} (${horaActual})\n`;
+      texto += `--------------------------------------\n`;
+      texto += `🧾 *Total de Cuentas:* ${ventas.length}\n`;
+      texto += `💵 *VENTA TOTAL DEL DÍA:* ${fmt(totalVendido)}\n`;
+      texto += `--------------------------------------\n`;
+      texto += `_Detalle de comandas:_\n`;
+
+      ventas.forEach((v, index) => {
+        texto += `• Orden #${v.id} (Mesa ${v.mesa}): ${fmt(v.total)} - ${v.hora}\n`;
+      });
+
+      const url = `https://api.whatsapp.com/send?phone=${encodeURIComponent(inputPhone)}&text=${encodeURIComponent(texto)}`;
+      window.open(url, '_blank');
+    }
+
+    /* FUNCIÓN 2: DESCARGA DE VENTAS EN FORMATO EXCEL REAL (.XLSX) */
+    function descargarExcelVentas() {
+      let ventas = JSON.parse(localStorage.getItem("salome_ventas") || "[]");
+      if (ventas.length === 0) {
+        return alert("No hay ventas registradas para exportar.");
+      }
+
+      // Estructuración de datos para la hoja de cálculo
+      const datosExcel = ventas.map(v => ({
+        "Nº Orden": v.id,
+        "Fecha": v.fecha,
+        "Hora": v.hora,
+        "Mesa": `Mesa ${v.mesa}`,
+        "Platos Consumidos": v.items,
+        "Valor Pagado ($)": Number(v.total)
+      }));
+
+      // Agregar fila de total al final
+      const sumaTotal = ventas.reduce((a, b) => a + Number(b.total), 0);
+      datosExcel.push({
+        "Nº Orden": "TOTAL",
+        "Fecha": "",
+        "Hora": "",
+        "Mesa": "",
+        "Platos Consumidos": "VENTAS TOTALES DEL DÍA",
+        "Valor Pagado ($)": sumaTotal
+      });
+
+      const ws = XLSX.utils.json_to_sheet(datosExcel);
+
+      // Ajuste automático del ancho de las columnas
+      ws['!cols'] = [
+        { wch: 10 }, // Nº Orden
+        { wch: 12 }, // Fecha
+        { wch: 10 }, // Hora
+        { wch: 10 }, // Mesa
+        { wch: 45 }, // Platos
+        { wch: 18 }  // Total
+      ];
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Ventas_Diarias");
+
+      const nombreArchivo = `Ventas_Salome_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      XLSX.writeFile(wb, nombreArchivo);
     }
 
     function reiniciarCajaDia() {
-      if (confirm('¿Reiniciar la caja a $0?')) {
+      if (confirm('¿Seguro que deseas reiniciar el arqueo a $0? Asegúrate de haber descargado el reporte en Excel o enviado el resumen a WhatsApp.')) {
         localStorage.removeItem("salome_ventas");
         renderCierre();
+        showToast('Caja reiniciada a $0');
       }
     }
 
