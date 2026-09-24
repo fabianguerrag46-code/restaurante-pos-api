@@ -146,13 +146,4 @@ app.post('/api/productos', async (req, res) => {
     `;
     const values = [nombre, categoria || 'General', precio, stock || 0];
     const { rows } = await pool.query(query, values);
-    res.status(201).json(rows[0]);
-  } catch (err) {
-    res.status(500).json({ error: 'Error al registrar el producto', detalle: err.message });
-  }
-});
-
-// Arrancar el servidor
-app.listen(PORT, () => {
-  console.log(`Servidor POS escuchando en el puerto ${PORT}`);
-});
+    res.status(201).json
