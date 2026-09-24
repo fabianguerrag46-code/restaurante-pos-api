@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Las Delicias de Salomé - POS & Facturación</title>
+  <title>Las Delicias de Salomé - POS</title>
   
-  <!-- SheetJS para Excel y html2pdf para generación directa de PDF -->
+  <!-- Librerías para Excel y PDF -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
@@ -19,7 +19,7 @@
       --text: #0f172a;
       --muted: #64748b;
       --border: #e2e8f0;
-      --card-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+      --shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
     }
 
     * {
@@ -40,50 +40,65 @@
       overflow: hidden;
     }
 
-    /* PANTALLA INICIAL DE ACCESO Y REGISTRO */
-    #modal-login {
+    /* PANTALLA PRINCIPAL DE LOGIN Y REGISTRO (OBLIGATORIA AL ABRIR) */
+    #pantalla-bienvenida {
       position: fixed;
       inset: 0;
-      background: rgba(15, 23, 42, 0.88);
-      backdrop-filter: blur(8px);
-      z-index: 500;
+      background: #0f172a;
+      z-index: 1000;
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 20px;
-      overflow-y: auto;
     }
-    .auth-box {
+    .caja-login {
       background: var(--surface);
-      border-radius: 20px;
-      padding: 26px;
+      border-radius: 24px;
+      padding: 28px 24px;
       width: 100%;
       max-width: 360px;
       text-align: center;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
     }
-    .role-tabs {
-      display: flex;
-      gap: 6px;
-      background: #f1f5f9;
-      padding: 4px;
-      border-radius: 12px;
-      margin: 16px 0;
+    .icono-logo {
+      font-size: 3rem;
+      margin-bottom: 4px;
     }
-    .role-btn {
-      flex: 1;
-      padding: 9px;
-      border: none;
-      background: transparent;
+    .titulo-bienvenida {
+      font-size: 1.3rem;
+      font-weight: 900;
+      color: var(--text);
+    }
+    .subtitulo-bienvenida {
+      font-size: 0.85rem;
       color: var(--muted);
-      font-weight: 700;
-      font-size: 0.8rem;
-      border-radius: 8px;
-      cursor: pointer;
+      margin: 4px 0 20px;
     }
-    .role-btn.active {
-      background: var(--primary);
-      color: #fff;
+    .campo-label {
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: var(--muted);
+      text-align: left;
+      display: block;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .input-form {
+      width: 100%;
+      padding: 13px 15px;
+      border-radius: 12px;
+      border: 1.5px solid var(--border);
+      background: #f8fafc;
+      color: var(--text);
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 14px;
+      outline: none;
+    }
+    .input-form:focus {
+      border-color: var(--primary);
+      background: #fff;
     }
 
     /* HEADER */
@@ -96,7 +111,7 @@
       align-items: center;
       z-index: 50;
     }
-    .brand-logo {
+    .brand-title {
       font-size: 1.05rem;
       font-weight: 900;
       color: var(--primary);
@@ -104,16 +119,12 @@
       align-items: center;
       gap: 6px;
     }
-    .client-tag {
-      font-size: 0.76rem;
+    .cliente-info-header {
+      font-size: 0.75rem;
       color: var(--muted);
-      font-weight: 600;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 130px;
+      font-weight: 700;
     }
-    .mesa-pill {
+    .pill-mesa {
       background: #fff7ed;
       color: var(--primary);
       border: 1px solid #fed7aa;
@@ -125,7 +136,7 @@
     }
 
     /* VISTAS */
-    .screen-view {
+    .vista-pantalla {
       flex: 1;
       overflow-y: auto;
       padding: 16px;
@@ -133,29 +144,27 @@
       display: none;
       -webkit-overflow-scrolling: touch;
     }
-    .screen-view.active { display: block; }
+    .vista-pantalla.activa { display: block; }
 
-    .search-input {
+    .buscador {
       width: 100%;
-      padding: 12px 14px;
+      padding: 13px 16px;
       border-radius: 12px;
       border: 1px solid var(--border);
       background: var(--surface);
       color: var(--text);
       font-size: 0.95rem;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
       outline: none;
     }
-    .search-input:focus { border-color: var(--primary); }
-
-    .cat-scroll {
+    .categorias-scroll {
       display: flex;
       gap: 8px;
       overflow-x: auto;
       padding-bottom: 6px;
       margin-bottom: 14px;
     }
-    .cat-chip {
+    .cat-btn {
       flex-shrink: 0;
       padding: 8px 16px;
       border-radius: 20px;
@@ -166,15 +175,15 @@
       font-weight: 700;
       cursor: pointer;
     }
-    .cat-chip.active {
+    .cat-btn.activa {
       background: var(--primary);
       color: #fff;
       border-color: var(--primary);
     }
 
     /* TARJETAS DE PLATOS */
-    .menu-cards-col { display: flex; flex-direction: column; gap: 12px; }
-    .card-item {
+    .menu-lista { display: flex; flex-direction: column; gap: 12px; }
+    .plato-card {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 16px;
@@ -182,9 +191,9 @@
       display: flex;
       gap: 14px;
       align-items: center;
-      box-shadow: var(--card-shadow);
+      box-shadow: var(--shadow);
     }
-    .card-img-wrap {
+    .plato-img-box {
       width: 86px;
       height: 86px;
       border-radius: 12px;
@@ -192,19 +201,19 @@
       flex-shrink: 0;
       background: #e2e8f0;
     }
-    .card-img-wrap img {
+    .plato-img-box img {
       width: 100%;
       height: 100%;
       object-fit: cover;
       display: block;
     }
-    .card-content { flex: 1; min-width: 0; }
-    .card-name { font-size: 0.96rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .card-desc { font-size: 0.76rem; color: var(--muted); margin: 3px 0 6px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-    .card-footer { display: flex; justify-content: space-between; align-items: center; }
-    .card-price { font-size: 1.05rem; font-weight: 900; color: var(--accent); }
+    .plato-detalles { flex: 1; min-width: 0; }
+    .plato-nombre { font-size: 0.96rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .plato-desc { font-size: 0.76rem; color: var(--muted); margin: 3px 0 6px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .plato-precio-fila { display: flex; justify-content: space-between; align-items: center; }
+    .plato-precio { font-size: 1.05rem; font-weight: 900; color: var(--accent); }
 
-    .btn-add-food {
+    .btn-pedir {
       background: var(--primary);
       color: #fff;
       border: none;
@@ -214,11 +223,11 @@
       font-weight: 800;
       cursor: pointer;
     }
-    .btn-add-food:active { transform: scale(0.92); }
+    .btn-pedir:active { transform: scale(0.92); }
 
     /* MESAS */
-    .tables-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .table-box {
+    .grid-mesas { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .mesa-cuadro {
       background: var(--surface);
       border: 2px solid var(--border);
       border-radius: 16px;
@@ -228,13 +237,13 @@
       flex-direction: column;
       justify-content: space-between;
       cursor: pointer;
-      box-shadow: var(--card-shadow);
+      box-shadow: var(--shadow);
     }
-    .table-box.active { border-color: var(--primary); background: #fffaf5; }
-    .table-box.busy { border-color: #f97316; }
+    .mesa-cuadro.activa { border-color: var(--primary); background: #fffaf5; }
+    .mesa-cuadro.ocupada { border-color: #f97316; }
 
-    /* BARRA FLOTANTE RESUMEN */
-    #floating-cart-pill {
+    /* BARRA FLOTANTE */
+    #barra-flotante {
       position: fixed;
       bottom: 74px;
       left: 16px;
@@ -252,36 +261,8 @@
       cursor: pointer;
     }
 
-    /* NAVEGACIÓN INFERIOR */
-    nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 64px;
-      background: var(--surface);
-      border-top: 1px solid var(--border);
-      display: flex;
-      z-index: 90;
-    }
-    .nav-item {
-      flex: 1;
-      border: none;
-      background: transparent;
-      color: var(--muted);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.72rem;
-      font-weight: 700;
-      gap: 3px;
-      cursor: pointer;
-    }
-    .nav-item span { font-size: 1.25rem; }
-    .nav-item.active { color: var(--primary); }
-
-    .btn-action-main {
+    /* BOTONES */
+    .btn-accion {
       width: 100%;
       padding: 13px;
       border-radius: 12px;
@@ -296,25 +277,54 @@
       gap: 8px;
       margin-top: 8px;
     }
-    .btn-green { background: #059669; }
-    .btn-blue { background: #2563eb; }
+    .btn-verde { background: #059669; }
+    .btn-azul { background: #2563eb; }
     .btn-whatsapp { background: #25d366; }
-    .btn-danger { background: #ef4444; }
+    .btn-rojo { background: #ef4444; }
 
-    /* MODAL DE FACTURA Y CONTENEDOR PDF */
+    /* NAV */
+    nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 64px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      z-index: 90;
+    }
+    .nav-tab {
+      flex: 1;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.72rem;
+      font-weight: 700;
+      gap: 3px;
+      cursor: pointer;
+    }
+    .nav-tab span { font-size: 1.25rem; }
+    .nav-tab.activa { color: var(--primary); }
+
+    /* MODAL DE FACTURA */
     #modal-factura {
       position: fixed;
       inset: 0;
       background: rgba(15, 23, 42, 0.85);
       backdrop-filter: blur(8px);
-      z-index: 1000;
+      z-index: 1050;
       display: none;
       align-items: center;
       justify-content: center;
       padding: 16px;
       overflow-y: auto;
     }
-    .factura-wrapper {
+    .contenedor-factura {
       background: #ffffff;
       color: #0f172a;
       width: 100%;
@@ -323,7 +333,7 @@
       padding: 20px;
       box-shadow: 0 20px 40px rgba(0,0,0,0.4);
     }
-    #factura-print-area {
+    #area-factura-pdf {
       background: #ffffff;
       padding: 16px 12px;
       font-family: "Courier New", Courier, monospace;
@@ -331,16 +341,16 @@
       border: 1px dashed #cbd5e1;
       border-radius: 8px;
     }
-    .fac-head { text-align: center; border-bottom: 2px dashed #94a3b8; padding-bottom: 10px; margin-bottom: 10px; }
-    .fac-title { font-size: 1.15rem; font-weight: 900; text-transform: uppercase; }
-    .fac-sub { font-size: 0.76rem; color: #475569; margin-top: 2px; }
-    .fac-table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 0.82rem; }
-    .fac-table th { text-align: left; border-bottom: 1.5px dashed #64748b; padding-bottom: 6px; font-weight: 800; }
-    .fac-table td { padding: 6px 0; border-bottom: 1px dotted #e2e8f0; }
-    .fac-totals { border-top: 2px dashed #94a3b8; padding-top: 8px; margin-top: 6px; font-size: 0.9rem; font-weight: 800; display: flex; flex-direction: column; gap: 4px; }
-    .fac-foot { text-align: center; font-size: 0.72rem; color: #64748b; margin-top: 12px; }
+    .fac-encabezado { text-align: center; border-bottom: 2px dashed #94a3b8; padding-bottom: 10px; margin-bottom: 10px; }
+    .fac-nombre-rest { font-size: 1.15rem; font-weight: 900; text-transform: uppercase; }
+    .fac-texto-sub { font-size: 0.76rem; color: #475569; margin-top: 2px; }
+    .fac-tabla { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 0.82rem; }
+    .fac-tabla th { text-align: left; border-bottom: 1.5px dashed #64748b; padding-bottom: 6px; font-weight: 800; }
+    .fac-tabla td { padding: 6px 0; border-bottom: 1px dotted #e2e8f0; }
+    .fac-resumen { border-top: 2px dashed #94a3b8; padding-top: 8px; margin-top: 6px; font-size: 0.9rem; font-weight: 800; display: flex; flex-direction: column; gap: 4px; }
+    .fac-pie { text-align: center; font-size: 0.72rem; color: #64748b; margin-top: 12px; }
 
-    #toast-banner {
+    #toast-aviso {
       position: fixed;
       top: 20px;
       left: 50%;
@@ -358,65 +368,48 @@
 </head>
 <body>
 
-  <div id="toast-banner"></div>
+  <div id="toast-aviso"></div>
 
-  <!-- PANTALLA INICIAL DE ACCESO / LOGIN / REGISTRO CLIENTE -->
-  <div id="modal-login">
-    <div class="auth-box">
-      <div style="font-size:2.8rem; margin-bottom:4px;">🥘</div>
-      <h2 style="font-weight:900;">Las Delicias de Salomé</h2>
-      <p style="color:var(--muted); font-size:0.85rem; margin-top:2px;">Ingresa para realizar tu pedido</p>
+  <!-- PANTALLA INICIAL OBLIGATORIA: INGRESO O REGISTRO DE CLIENTE -->
+  <div id="pantalla-bienvenida">
+    <div class="caja-login">
+      <div class="icono-logo">🥘</div>
+      <h2 class="titulo-bienvenida">Las Delicias de Salomé</h2>
+      <p class="subtitulo-bienvenida">Bienvenido. Ingresa tus datos para ordenar</p>
 
-      <div class="role-tabs">
-        <button class="role-btn active" id="tab-rol-cli" onclick="elegirRolLogin('cliente')">👤 Cliente</button>
-        <button class="role-btn" id="tab-rol-mes" onclick="elegirRolLogin('mesero')">🍽️ Mesero</button>
-        <button class="role-btn" id="tab-rol-adm" onclick="elegirRolLogin('admin')">🔑 Admin</button>
-      </div>
+      <!-- FORMULARIO CLIENTE -->
+      <div id="form-cliente-registro">
+        <label class="campo-label">Teléfono o Celular:</label>
+        <input type="tel" id="reg-telefono" class="input-form" placeholder="Ej: 3001234567" inputmode="numeric" oninput="autocompletarSiExiste()">
 
-      <!-- SECCIÓN CLIENTE (LOGIN / REGISTRO) -->
-      <div id="auth-sec-cliente">
-        <!-- Paso 1: Identificación por Celular -->
-        <div id="cli-step-phone">
-          <label style="font-size:0.75rem; color:var(--muted); font-weight:700; display:block; text-align:left; margin-bottom:4px;">NÚMERO DE TELÉFONO / CELULAR:</label>
-          <input type="tel" id="cli-phone-in" class="search-input" placeholder="Ej: 3001234567" inputmode="numeric" maxlength="10">
-          <button class="btn-action-main btn-green" onclick="verificarClienteExiste()">Continuar</button>
-        </div>
+        <label class="campo-label">Nombre Completo:</label>
+        <input type="text" id="reg-nombre" class="input-form" placeholder="Tu nombre y apellido">
 
-        <!-- Paso 2: Registro de nuevo usuario (si no existe) -->
-        <div id="cli-step-register" style="display:none; text-align:left;">
-          <div style="background:#f1f5f9; padding:8px 12px; border-radius:10px; font-size:0.8rem; color:var(--primary); font-weight:700; margin-bottom:10px;">
-            ✨ ¡Usuario nuevo! Completa tu registro:
-          </div>
-          <label style="font-size:0.75rem; color:var(--muted); font-weight:700; display:block; margin-bottom:4px;">NOMBRE COMPLETO:</label>
-          <input type="text" id="reg-name-in" class="search-input" placeholder="Ej: Juan Pérez">
-          
-          <label style="font-size:0.75rem; color:var(--muted); font-weight:700; display:block; margin-bottom:4px;">CORREO O IDENTIFICACIÓN (OPCIONAL):</label>
-          <input type="text" id="reg-extra-in" class="search-input" placeholder="Ej: juan@email.com o C.C.">
+        <label class="campo-label">Mesa donde te encuentras:</label>
+        <select id="reg-mesa" class="input-form" style="font-weight:700;">
+          <option value="1">Mesa 1</option><option value="2">Mesa 2</option><option value="3">Mesa 3</option><option value="4">Mesa 4</option>
+          <option value="5">Mesa 5</option><option value="6">Mesa 6</option><option value="7">Mesa 7</option><option value="8">Mesa 8</option>
+        </select>
 
-          <button class="btn-action-main btn-green" onclick="guardarNuevoCliente()">Guardar y Continuar</button>
-          <button onclick="volverAPasoTelefono()" style="width:100%; background:none; border:none; color:var(--muted); font-size:0.78rem; font-weight:700; margin-top:8px; cursor:pointer;">← Cambiar número</button>
-        </div>
+        <button class="btn-accion btn-verde" onclick="iniciarSesionClienteDirecto()">
+          Entrar y Ver Menú
+        </button>
 
-        <!-- Paso 3: Selección de Mesa (cliente ya validado) -->
-        <div id="cli-step-mesa" style="display:none; text-align:left;">
-          <div style="margin-bottom:12px; font-size:0.9rem;">
-            ¡Hola, <strong id="cli-saludo-nombre" style="color:var(--primary);">Amigo</strong>! 👋
-          </div>
-          <label style="font-size:0.75rem; color:var(--muted); font-weight:700; display:block; margin-bottom:4px;">SELECCIONA TU MESA ACTUAL:</label>
-          <select id="auth-mesa-select" class="search-input" style="font-weight:700;">
-            <option value="1">Mesa 1</option><option value="2">Mesa 2</option><option value="3">Mesa 3</option><option value="4">Mesa 4</option>
-            <option value="5">Mesa 5</option><option value="6">Mesa 6</option><option value="7">Mesa 7</option><option value="8">Mesa 8</option>
-          </select>
-          <button class="btn-action-main btn-green" onclick="completarIngresoCliente()">Ver Menú y Ordenar</button>
-          <button onclick="volverAPasoTelefono()" style="width:100%; background:none; border:none; color:var(--muted); font-size:0.78rem; font-weight:700; margin-top:8px; cursor:pointer;">Cerrar sesión / Otro cliente</button>
+        <div style="margin-top:16px; border-top:1px dashed #cbd5e1; padding-top:12px;">
+          <button onclick="mostrarLoginPersonal()" style="background:none; border:none; color:var(--muted); font-size:0.8rem; font-weight:700; cursor:pointer;">
+            ¿Eres mesero o administrador? Ingresar con PIN
+          </button>
         </div>
       </div>
 
-      <!-- SECCIÓN STAFF (MESERO / ADMIN) -->
-      <div id="auth-sec-staff" style="display:none;">
-        <label style="font-size:0.75rem; color:var(--muted); font-weight:700; display:block; text-align:left; margin-bottom:6px;">INGRESA EL PIN:</label>
-        <input type="password" id="auth-pin-input" class="search-input" placeholder="••••" maxlength="4" inputmode="numeric" style="text-align:center; font-size:1.6rem; letter-spacing:6px;">
-        <button class="btn-action-main btn-green" onclick="ingresarStaff()">Iniciar Sesión</button>
+      <!-- FORMULARIO PERSONAL CON PIN -->
+      <div id="form-personal-pin" style="display:none; text-align:left;">
+        <label class="campo-label">PIN de Mesero (1234) o Admin (9999):</label>
+        <input type="password" id="personal-pin" class="input-form" placeholder="••••" maxlength="4" inputmode="numeric" style="text-align:center; font-size:1.6rem; letter-spacing:6px;">
+        <button class="btn-accion btn-azul" onclick="iniciarSesionPersonal()">Acceder como Personal</button>
+        <button onclick="mostrarLoginCliente()" style="width:100%; background:none; border:none; color:var(--muted); font-size:0.8rem; font-weight:700; margin-top:10px; cursor:pointer; text-align:center;">
+          ← Volver al acceso de clientes
+        </button>
       </div>
     </div>
   </div>
@@ -424,106 +417,106 @@
   <!-- HEADER -->
   <header>
     <div>
-      <div class="brand-logo">🥘 Las Delicias</div>
-      <div class="client-tag" id="header-client-name">Cliente: Invitado</div>
+      <div class="brand-title">🥘 Las Delicias</div>
+      <div class="cliente-info-header" id="header-nombre-cliente">Cliente: Invitado</div>
     </div>
-    <div class="mesa-pill" id="header-mesa-indicator" onclick="cambiarVista('mesas')">
+    <div class="pill-mesa" id="header-mesa-pill" onclick="mostrarVista('mesas')">
       Mesa 1
     </div>
   </header>
 
-  <!-- PÍLDORA FLOTANTE DE COMANDA -->
-  <div id="floating-cart-pill" onclick="cambiarVista('comanda')">
-    <div id="floating-cart-qty">0 platos en orden</div>
-    <div id="floating-cart-total">$0 ›</div>
+  <!-- PÍLDORA FLOTANTE -->
+  <div id="barra-flotante" onclick="mostrarVista('comanda')">
+    <div id="txt-flotante-platos">0 platos en orden</div>
+    <div id="txt-flotante-total">$0 ›</div>
   </div>
 
-  <!-- VISTA 1: CARTA / MENÚ -->
-  <main class="screen-view active" id="view-menu">
-    <input type="text" id="menu-search-box" class="search-input" placeholder="🔍 Buscar plato o bebida..." oninput="dibujarMenu()">
+  <!-- VISTA 1: MENÚ -->
+  <main class="vista-pantalla activa" id="vista-menu">
+    <input type="text" id="caja-buscar" class="buscador" placeholder="🔍 Buscar plato o bebida..." oninput="dibujarMenu()">
 
-    <div class="cat-scroll">
-      <button class="cat-chip active" onclick="filtrarCategoriaMenu('todos')">🔥 Todos</button>
-      <button class="cat-chip" onclick="filtrarCategoriaMenu('desayunos')">🍳 Desayunos</button>
-      <button class="cat-chip" onclick="filtrarCategoriaMenu('bebidas')">☕ Bebidas</button>
+    <div class="categorias-scroll">
+      <button class="cat-btn activa" onclick="cambiarCategoria('todos')">🔥 Todos</button>
+      <button class="cat-btn" onclick="cambiarCategoria('desayunos')">🍳 Desayunos</button>
+      <button class="cat-btn" onclick="cambiarCategoria('bebidas')">☕ Bebidas</button>
     </div>
 
-    <div class="menu-cards-col" id="menu-cards-container"></div>
+    <div class="menu-lista" id="contenedor-platos"></div>
   </main>
 
   <!-- VISTA 2: MESAS -->
-  <main class="screen-view" id="view-mesas">
+  <main class="vista-pantalla" id="vista-mesas">
     <div style="font-size:0.8rem; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:12px;">
-      Salón de Mesas
+      Selecciona una mesa
     </div>
-    <div class="tables-grid" id="tables-grid-container"></div>
+    <div class="grid-mesas" id="contenedor-mesas"></div>
   </main>
 
   <!-- VISTA 3: COMANDA -->
-  <main class="screen-view" id="view-comanda">
-    <h2 id="comanda-mesa-title" style="font-weight:900; margin-bottom:14px;">Mesa 1</h2>
-    <div id="comanda-items-wrapper" style="margin-bottom:16px;"></div>
+  <main class="vista-pantalla" id="vista-comanda">
+    <h2 id="titulo-comanda-mesa" style="font-weight:900; margin-bottom:14px;">Mesa 1</h2>
+    <div id="contenedor-items-comanda" style="margin-bottom:16px;"></div>
 
-    <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:16px; box-shadow:var(--card-shadow);">
+    <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:16px; box-shadow:var(--shadow);">
       <div style="display:flex; justify-content:space-between; font-size:1.25rem; font-weight:900; margin-bottom:14px;">
         <span>TOTAL:</span>
-        <span id="comanda-total-number" style="color:var(--accent);">$0</span>
+        <span id="txt-comanda-total" style="color:var(--accent);">$0</span>
       </div>
-      <button class="btn-action-main btn-blue" onclick="mostrarFacturaActual(false)">
+      <button class="btn-accion btn-azul" onclick="generarFactura(false)">
         🧾 Ver Factura Detallada
       </button>
-      <button class="btn-action-main btn-green" id="btn-cobrar-accion" onclick="procesarCobro()">
+      <button class="btn-accion btn-verde" id="btn-cobrar-principal" onclick="cobrarOPedir()">
         💵 Cobrar y Generar Factura
       </button>
     </div>
   </main>
 
-  <!-- VISTA 4: CIERRE Y EXCEL (ADMIN) -->
-  <main class="screen-view" id="view-cierre">
+  <!-- VISTA 4: CIERRE (ADMINISTRADOR) -->
+  <main class="vista-pantalla" id="vista-cierre">
     <div style="font-size:0.8rem; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:12px;">
       Arqueo de Caja del Día
     </div>
 
-    <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:16px; margin-bottom:14px; box-shadow:var(--card-shadow);">
+    <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:16px; margin-bottom:14px; box-shadow:var(--shadow);">
       <div style="font-size:0.75rem; color:var(--muted); font-weight:700;">VENTAS TOTALES HOY</div>
-      <div id="kpi-total-cobrado" style="font-size:1.8rem; font-weight:900; color:var(--accent); margin:4px 0 8px;">$0</div>
-      <div style="font-size:0.85rem; color:var(--muted);" id="kpi-conteo-cuentas">0 pedidos cobrados</div>
+      <div id="kpi-caja-total" style="font-size:1.8rem; font-weight:900; color:var(--accent); margin:4px 0 8px;">$0</div>
+      <div style="font-size:0.85rem; color:var(--muted);" id="kpi-caja-conteo">0 pedidos cobrados</div>
     </div>
 
-    <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:16px; margin-bottom:14px; box-shadow:var(--card-shadow);">
-      <label style="font-size:0.75rem; color:var(--muted); font-weight:700; display:block; margin-bottom:6px;">WHATSAPP DESTINO (ADMIN):</label>
-      <input type="tel" id="admin-ws-input" class="search-input" placeholder="Ej: 573001234567" style="margin-bottom:0;">
+    <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:16px; margin-bottom:14px; box-shadow:var(--shadow);">
+      <label class="campo-label">WHATSAPP DESTINO (ADMIN):</label>
+      <input type="tel" id="ws-admin-tel" class="input-form" placeholder="Ej: 573001234567" style="margin-bottom:0;">
     </div>
 
-    <button class="btn-action-main btn-whatsapp" onclick="enviarReporteWs()">
+    <button class="btn-accion btn-whatsapp" onclick="enviarCierreWhatsApp()">
       📲 Enviar Resumen al WhatsApp
     </button>
-    <button class="btn-action-main btn-green" onclick="exportarExcelVentas()">
+    <button class="btn-accion btn-verde" onclick="exportarVentasExcel()">
       📊 Descargar Ventas en Excel (.xlsx)
     </button>
-    <button class="btn-action-main btn-danger" onclick="reiniciarCajaDiaria()" style="margin-top:20px;">
+    <button class="btn-accion btn-rojo" onclick="reiniciarCaja()" style="margin-top:20px;">
       🗑️ Reiniciar Caja a $0
     </button>
   </main>
 
   <!-- MODAL DE FACTURA PROFESIONAL & DESCARGA PDF -->
   <div id="modal-factura">
-    <div class="factura-wrapper">
+    <div class="contenedor-factura">
       
-      <!-- CONTENIDO FORMAL DE LA FACTURA (EXPORTABLE A PDF) -->
-      <div id="factura-print-area">
-        <div class="fac-head">
-          <div class="fac-title">Las Delicias de Salomé</div>
-          <div class="fac-sub">NIT: 901.458.723-1</div>
-          <div class="fac-sub">Dirección: Carrera Principal # 10 - 25</div>
-          <div class="fac-sub">Tel: 300 123 4567</div>
-          <div class="fac-sub" style="margin-top:6px;"><strong id="fac-txt-numero">FACTURA: FAC-001</strong></div>
-          <div class="fac-sub" id="fac-txt-fechahora">2026-09-24 12:00 PM</div>
-          <div class="fac-sub" id="fac-txt-mesa">MESA: 1</div>
-          <div class="fac-sub" id="fac-txt-cliente" style="font-weight:700; color:#0f172a;">CLIENTE: General</div>
+      <!-- CONTENIDO QUE SE DESCARGA EN EL ARCHIVO PDF -->
+      <div id="area-factura-pdf">
+        <div class="fac-encabezado">
+          <div class="fac-nombre-rest">Las Delicias de Salomé</div>
+          <div class="fac-texto-sub">NIT: 901.458.723-1</div>
+          <div class="fac-texto-sub">Dirección: Carrera Principal # 10 - 25</div>
+          <div class="fac-texto-sub">Tel: 300 123 4567</div>
+          <div class="fac-texto-sub" style="margin-top:6px;"><strong id="fac-numero-doc">FACTURA: FAC-001</strong></div>
+          <div class="fac-texto-sub" id="fac-fecha-doc">2026-09-24 12:00 PM</div>
+          <div class="fac-texto-sub" id="fac-mesa-doc">MESA: 1</div>
+          <div class="fac-texto-sub" id="fac-cliente-doc" style="font-weight:700; color:#0f172a; margin-top:2px;">CLIENTE: General</div>
         </div>
 
-        <table class="fac-table">
+        <table class="fac-tabla">
           <thead>
             <tr>
               <th>DESCRIPCIÓN</th>
@@ -532,13 +525,13 @@
               <th style="text-align:right;">TOTAL</th>
             </tr>
           </thead>
-          <tbody id="fac-table-body"></tbody>
+          <tbody id="fac-cuerpo-tabla"></tbody>
         </table>
 
-        <div class="fac-totals">
+        <div class="fac-resumen">
           <div style="display:flex; justify-content:space-between;">
             <span>SUBTOTAL:</span>
-            <span id="fac-val-subtotal">$0</span>
+            <span id="fac-val-sub">$0</span>
           </div>
           <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:#64748b;">
             <span>IMPOCONSUMO (0%):</span>
@@ -546,11 +539,11 @@
           </div>
           <div style="display:flex; justify-content:space-between; font-size:1.05rem; font-weight:900; margin-top:4px;">
             <span>TOTAL FACTURA:</span>
-            <span id="fac-val-total">$0</span>
+            <span id="fac-val-tot">$0</span>
           </div>
         </div>
 
-        <div class="fac-foot">
+        <div class="fac-pie">
           <div>¡Muchas gracias por su preferencia!</div>
           <div style="margin-top:2px;">Régimen Simple de Tributación</div>
         </div>
@@ -558,10 +551,10 @@
 
       <!-- BOTONES DE ACCIÓN DE FACTURA -->
       <div style="margin-top:14px; display:flex; flex-direction:column; gap:8px;">
-        <button class="btn-action-main btn-blue" onclick="descargarFacturaPDF()">
-          📄 Descargar Factura PDF
+        <button class="btn-accion btn-azul" onclick="descargarPDFReal()">
+          📄 Descargar Factura en PDF
         </button>
-        <button class="btn-action-main btn-whatsapp" onclick="compartirFacturaWs()">
+        <button class="btn-accion btn-whatsapp" onclick="enviarFacturaWhatsApp()">
           📲 Enviar Factura a WhatsApp
         </button>
         <button onclick="cerrarFacturaModal()" style="padding:10px; background:#f1f5f9; color:#0f172a; border:none; border-radius:10px; font-weight:800; cursor:pointer;">
@@ -572,21 +565,21 @@
     </div>
   </div>
 
-  <!-- NAVEGACIÓN INFERIOR (TAB BAR) -->
+  <!-- NAVEGACIÓN INFERIOR -->
   <nav>
-    <button class="nav-item active" id="tab-btn-menu" onclick="cambiarVista('menu')">
+    <button class="nav-tab activa" id="tab-menu" onclick="mostrarVista('menu')">
       <span>📋</span>Carta
     </button>
-    <button class="nav-item" id="tab-btn-mesas" onclick="cambiarVista('mesas')">
+    <button class="nav-tab" id="tab-mesas" onclick="mostrarVista('mesas')">
       <span>🪑</span>Mesas
     </button>
-    <button class="nav-item" id="tab-btn-comanda" onclick="cambiarVista('comanda')">
+    <button class="nav-tab" id="tab-comanda" onclick="mostrarVista('comanda')">
       <span>🧾</span>Comanda
     </button>
-    <button class="nav-item" id="tab-btn-cierre" onclick="cambiarVista('cierre')">
+    <button class="nav-tab" id="tab-cierre" onclick="mostrarVista('cierre')">
       <span>📊</span>Cierre
     </button>
-    <button class="nav-item" onclick="cerrarSesionApp()">
+    <button class="nav-tab" onclick="cerrarSesion()">
       <span>🚪</span>Salir
     </button>
   </nav>
@@ -595,30 +588,29 @@
     const PIN_MESERO = "1234";
     const PIN_ADMIN = "9999";
 
-    let usuarioRol = 'cliente';
-    let rolModalElegido = 'cliente';
+    let rolActual = 'cliente';
     let categoriaActiva = 'todos';
-    let mesaActivaId = 1;
-    let facturaMemoria = null;
+    let mesaActiva = 1;
+    let facturaActiva = null;
 
-    // Cliente actual y clientes almacenados
-    let clienteActual = JSON.parse(localStorage.getItem("salome_cliente_activo") || "null") || { nombre: "Consumidor Final", telefono: "" };
-    let clientesBD = JSON.parse(localStorage.getItem("salome_clientes_bd") || "[]");
+    // BASE DE DATOS LOCAL DE CLIENTES Y CLIENTE EN SESIÓN
+    let listaClientes = JSON.parse(localStorage.getItem("salome_db_clientes") || "[]");
+    let clienteActual = JSON.parse(localStorage.getItem("salome_cliente_sesion") || "null") || { nombre: "Invitado", telefono: "" };
 
     let mesas = JSON.parse(localStorage.getItem("salome_mesas") || "null") || 
                 Array.from({ length: 8 }, (_, i) => ({ id: i + 1, items: [] }));
 
     const fmt = (v) => '$' + Number(v || 0).toLocaleString('es-CO');
 
-    function notify(txt) {
-      const t = document.getElementById('toast-banner');
+    function aviso(txt) {
+      const t = document.getElementById('toast-aviso');
       t.innerText = txt;
       t.style.display = 'block';
       setTimeout(() => { t.style.display = 'none'; }, 1600);
     }
 
-    // CATÁLOGO COMPLETO VINCULADO A TUS FOTOS REALES
-    const PRODUCTOS = [
+    // CATÁLOGO CON TUS 11 FOTOS REALES
+    const PLATOS = [
       { id: 1, name: "Arroz con Huevo Frito", price: 9000, cat: "desayunos", desc: "Arroz blanco caliente acompañado de huevo frito con yema tierna", img: "imagenes/arroz_huevo.jpg" },
       { id: 2, name: "Desayuno Salomé Completo", price: 15000, cat: "desayunos", desc: "Huevos revueltos, salchicha, arepa, pandebono, queso y chocolate", img: "imagenes/huevos_completos.jpg" },
       { id: 3, name: "Huevos con Jamón en Cazuela", price: 12000, cat: "desayunos", desc: "Huevos revueltos tiernos con jamón en sartén caliente y jugo", img: "imagenes/huevos_cazuela.jpg" },
@@ -632,146 +624,112 @@
       { id: 11, name: "Café Tinto Campesino", price: 3500, cat: "bebidas", desc: "Taza de café recién filtrado, aroma intenso y sabor tradicional", img: "imagenes/cafe.jpg" }
     ];
 
-    /* CONTROL DE ROLES Y REGISTRO / LOGIN */
-    function elegirRolLogin(r) {
-      rolModalElegido = r;
-      ['cli', 'mes', 'adm'].forEach(k => document.getElementById(`tab-rol-${k}`).classList.remove('active'));
-      document.getElementById(`tab-rol-${r.slice(0,3)}`).classList.add('active');
-
-      if (r === 'cliente') {
-        document.getElementById('auth-sec-cliente').style.display = 'block';
-        document.getElementById('auth-sec-staff').style.display = 'none';
-      } else {
-        document.getElementById('auth-sec-cliente').style.display = 'none';
-        document.getElementById('auth-sec-staff').style.display = 'block';
-        document.getElementById('auth-pin-input').value = '';
+    /* AUTOCOMPLETAR SI EL TELÉFONO YA ESTÁ REGISTRADO */
+    function autocompletarSiExiste() {
+      const tel = document.getElementById('reg-telefono').value.trim();
+      const cli = listaClientes.find(c => c.telefono === tel);
+      if (cli) {
+        document.getElementById('reg-nombre').value = cli.nombre;
       }
     }
 
-    /* LÓGICA DE REGISTRO / LOGIN DE CLIENTE */
-    let tempTelefono = '';
+    /* LOGIN / REGISTRO DEL CLIENTE */
+    function iniciarSesionClienteDirecto() {
+      const tel = document.getElementById('reg-telefono').value.trim();
+      const nom = document.getElementById('reg-nombre').value.trim();
+      const mesa = Number(document.getElementById('reg-mesa').value);
 
-    function verificarClienteExiste() {
-      const tel = document.getElementById('cli-phone-in').value.trim();
       if (!tel || tel.length < 7) {
-        return alert('Por favor ingresa un número de teléfono válido.');
+        return alert('Por favor ingresa tu número de teléfono o celular.');
       }
-      tempTelefono = tel;
+      if (!nom) {
+        return alert('Por favor escribe tu nombre completo.');
+      }
 
-      // Buscar si el cliente ya existe en la base de datos
-      const encontrado = clientesBD.find(c => c.telefono === tel);
-
-      if (encontrado) {
-        clienteActual = encontrado;
-        localStorage.setItem("salome_cliente_activo", JSON.stringify(clienteActual));
-        mostrarPasoMesa(clienteActual.nombre);
+      // Si no existe, lo agregamos a la base de datos permanente
+      let existente = listaClientes.find(c => c.telefono === tel);
+      if (!existente) {
+        existente = { telefono: tel, nombre: nom, fecha: new Date().toLocaleDateString() };
+        listaClientes.push(existente);
       } else {
-        // Es un cliente nuevo: mostrar formulario de registro
-        document.getElementById('cli-step-phone').style.display = 'none';
-        document.getElementById('cli-step-register').style.display = 'block';
-        document.getElementById('reg-name-in').value = '';
+        existente.nombre = nom; // Actualizar nombre si cambió
       }
+      localStorage.setItem("salome_db_clientes", JSON.stringify(listaClientes));
+
+      // Guardar sesión actual
+      clienteActual = existente;
+      localStorage.setItem("salome_cliente_sesion", JSON.stringify(clienteActual));
+      mesaActiva = mesa;
+      rolActual = 'cliente';
+
+      configurarPermisos();
+      document.getElementById('pantalla-bienvenida').style.display = 'none';
+      mostrarVista('menu');
+      aviso(`¡Bienvenido, ${clienteActual.nombre}!`);
     }
 
-    function guardarNuevoCliente() {
-      const nombre = document.getElementById('reg-name-in').value.trim();
-      const extra = document.getElementById('reg-extra-in').value.trim();
-
-      if (!nombre) {
-        return alert('Por favor ingresa tu nombre completo.');
-      }
-
-      const nuevoCliente = {
-        telefono: tempTelefono,
-        nombre: nombre,
-        extra: extra,
-        fechaRegistro: new Date().toLocaleDateString()
-      };
-
-      // Guardar en la base de datos local
-      clientesBD.push(nuevoCliente);
-      localStorage.setItem("salome_clientes_bd", JSON.stringify(clientesBD));
-
-      // Asignar como cliente activo
-      clienteActual = nuevoCliente;
-      localStorage.setItem("salome_cliente_activo", JSON.stringify(clienteActual));
-
-      notify('¡Registro guardado con éxito!');
-      mostrarPasoMesa(clienteActual.nombre);
+    function mostrarLoginPersonal() {
+      document.getElementById('form-cliente-registro').style.display = 'none';
+      document.getElementById('form-personal-pin').style.display = 'block';
     }
 
-    function mostrarPasoMesa(nombre) {
-      document.getElementById('cli-step-phone').style.display = 'none';
-      document.getElementById('cli-step-register').style.display = 'none';
-      document.getElementById('cli-step-mesa').style.display = 'block';
-      document.getElementById('cli-saludo-nombre').innerText = nombre;
+    function mostrarLoginCliente() {
+      document.getElementById('form-personal-pin').style.display = 'none';
+      document.getElementById('form-cliente-registro').style.display = 'block';
     }
 
-    function volverAPasoTelefono() {
-      document.getElementById('cli-step-register').style.display = 'none';
-      document.getElementById('cli-step-mesa').style.display = 'none';
-      document.getElementById('cli-step-phone').style.display = 'block';
-    }
-
-    function completarIngresoCliente() {
-      mesaActivaId = Number(document.getElementById('auth-mesa-select').value);
-      usuarioRol = 'cliente';
-      activarPermisosRol();
-      document.getElementById('modal-login').style.display = 'none';
-      cambiarVista('menu');
-      notify(`Bienvenido, ${clienteActual.nombre}`);
-    }
-
-    function ingresarStaff() {
-      const pin = document.getElementById('auth-pin-input').value.trim();
-      if (rolModalElegido === 'mesero' && (pin === PIN_MESERO || pin === PIN_ADMIN)) {
-        usuarioRol = 'mesero';
-        clienteActual = { nombre: "Mesero de Turno", telefono: "Personal" };
-      } else if (rolModalElegido === 'admin' && pin === PIN_ADMIN) {
-        usuarioRol = 'admin';
+    function iniciarSesionPersonal() {
+      const pin = document.getElementById('personal-pin').value.trim();
+      if (pin === PIN_MESERO) {
+        rolActual = 'mesero';
+        clienteActual = { nombre: "Mesero", telefono: "Interno" };
+      } else if (pin === PIN_ADMIN) {
+        rolActual = 'admin';
         clienteActual = { nombre: "Administrador", telefono: "Gerencia" };
       } else {
-        return alert('PIN incorrecto.');
+        return alert('PIN incorrecto. (Mesero: 1234 / Admin: 9999)');
       }
-      activarPermisosRol();
-      document.getElementById('modal-login').style.display = 'none';
-      cambiarVista('mesas');
+
+      configurarPermisos();
+      document.getElementById('pantalla-bienvenida').style.display = 'none';
+      mostrarVista('mesas');
     }
 
-    function cerrarSesionApp() {
-      document.getElementById('modal-login').style.display = 'flex';
-      volverAPasoTelefono();
+    function cerrarSesion() {
+      document.getElementById('pantalla-bienvenida').style.display = 'flex';
+      mostrarLoginCliente();
     }
 
-    function activarPermisosRol() {
-      document.getElementById('header-mesa-indicator').innerText = `Mesa ${mesaActivaId}`;
-      document.getElementById('header-client-name').innerText = `Cliente: ${clienteActual.nombre}`;
-      const btnCierre = document.getElementById('tab-btn-cierre');
-      const btnCobrar = document.getElementById('btn-cobrar-accion');
+    function configurarPermisos() {
+      document.getElementById('header-mesa-pill').innerText = `Mesa ${mesaActiva}`;
+      document.getElementById('header-nombre-cliente').innerText = `Cliente: ${clienteActual.nombre}`;
+      
+      const tabCierre = document.getElementById('tab-cierre');
+      const btnCobrar = document.getElementById('btn-cobrar-principal');
 
-      if (usuarioRol === 'cliente') {
-        btnCierre.style.display = 'none';
+      if (rolActual === 'cliente') {
+        tabCierre.style.display = 'none';
         btnCobrar.innerText = 'Pedir Cuenta / Ver Factura';
-      } else if (usuarioRol === 'mesero') {
-        btnCierre.style.display = 'none';
-        btnCobrar.innerText = 'Cobrar y Generar Factura';
-      } else if (usuarioRol === 'admin') {
-        btnCierre.style.display = 'flex';
-        btnCobrar.innerText = 'Cobrar y Generar Factura';
-        document.getElementById('admin-ws-input').value = localStorage.getItem("salome_ws_phone") || "";
+      } else if (rolActual === 'mesero') {
+        tabCierre.style.display = 'none';
+        btnCobrar.innerText = 'Cobrar y Facturar';
+      } else if (rolActual === 'admin') {
+        tabCierre.style.display = 'flex';
+        btnCobrar.innerText = 'Cobrar y Facturar';
+        document.getElementById('ws-admin-tel').value = localStorage.getItem("salome_ws_phone") || "";
       }
     }
 
-    /* CAMBIO DE PANTALLA */
-    function cambiarVista(vista) {
-      document.querySelectorAll('.screen-view').forEach(v => v.classList.remove('active'));
-      document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    /* CAMBIAR PANTALLA */
+    function mostrarVista(vista) {
+      document.querySelectorAll('.vista-pantalla').forEach(v => v.classList.remove('activa'));
+      document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('activa'));
 
-      const target = document.getElementById(`view-${vista}`);
-      if (target) target.classList.add('active');
+      const target = document.getElementById(`vista-${vista}`);
+      if (target) target.classList.add('activa');
 
-      const btnNav = document.getElementById(`tab-btn-${vista}`);
-      if (btnNav) btnNav.classList.add('active');
+      const btnNav = document.getElementById(`tab-${vista}`);
+      if (btnNav) btnNav.classList.add('activa');
 
       if (vista === 'menu') dibujarMenu();
       if (vista === 'mesas') dibujarMesas();
@@ -781,23 +739,23 @@
       actualizarBarraFlotante();
     }
 
-    /* MENÚ Y PRODUCTOS */
-    function filtrarCategoriaMenu(c) {
-      categoriaActiva = c;
-      document.querySelectorAll('.cat-chip').forEach(b => b.classList.remove('active'));
-      event.target.classList.add('active');
+    /* MENÚ */
+    function cambiarCategoria(cat) {
+      categoriaActiva = cat;
+      document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('activa'));
+      event.target.classList.add('activa');
       dibujarMenu();
     }
 
     function dibujarMenu() {
-      const cont = document.getElementById('menu-cards-container');
+      const cont = document.getElementById('contenedor-platos');
       cont.innerHTML = '';
 
-      const query = (document.getElementById('menu-search-box')?.value || '').toLowerCase().trim();
+      const query = (document.getElementById('caja-buscar')?.value || '').toLowerCase().trim();
 
       let lista = categoriaActiva === 'todos' 
-        ? PRODUCTOS 
-        : PRODUCTOS.filter(p => p.cat === categoriaActiva);
+        ? PLATOS 
+        : PLATOS.filter(p => p.cat === categoriaActiva);
 
       if (query) {
         lista = lista.filter(p => p.name.toLowerCase().includes(query));
@@ -805,18 +763,18 @@
 
       lista.forEach(p => {
         const card = document.createElement('div');
-        card.className = 'card-item';
+        card.className = 'plato-card';
         card.innerHTML = `
-          <div class="card-img-wrap">
+          <div class="plato-img-box">
             <img src="./${p.img}" alt="${p.name}" loading="lazy" 
-                 onerror="if (!this.dataset.retry) { this.dataset.retry=1; this.src='${p.img}'; } else { this.parentElement.innerHTML='<div style=\'display:flex;align-items:center;justify-content:center;height:100%;font-size:1.8rem;\'>🍳</div>'; }">
+                 onerror="if(!this.dataset.tried){this.dataset.tried=1; this.src='${p.img}';}else{this.parentElement.innerHTML='<div style=\\'display:flex;align-items:center;justify-content:center;height:100%;font-size:1.8rem;\\'>🍳</div>';}">
           </div>
-          <div class="card-content">
-            <div class="card-name">${p.name}</div>
-            <div class="card-desc">${p.desc}</div>
-            <div class="card-footer">
-              <span class="card-price">${fmt(p.price)}</span>
-              <button class="btn-add-food" onclick="agregarAlPedido(${p.id})">+ Agregar</button>
+          <div class="plato-detalles">
+            <div class="plato-nombre">${p.name}</div>
+            <div class="plato-desc">${p.desc}</div>
+            <div class="plato-precio-fila">
+              <span class="plato-precio">${fmt(p.price)}</span>
+              <button class="btn-pedir" onclick="pedirPlato(${p.id})">+ Pedir</button>
             </div>
           </div>
         `;
@@ -824,45 +782,44 @@
       });
     }
 
-    function agregarAlPedido(id) {
-      const prod = PRODUCTOS.find(x => x.id === id);
-      if (!prod) return;
+    function pedirPlato(id) {
+      const plato = PLATOS.find(x => x.id === id);
+      if (!plato) return;
 
-      let m = mesas.find(x => x.id === mesaActivaId);
-      const ex = m.items.find(i => i.name === prod.name);
+      let m = mesas.find(x => x.id === mesaActiva);
+      const existe = m.items.find(i => i.name === plato.name);
 
-      if (ex) {
-        ex.qty += 1;
+      if (existe) {
+        existe.qty += 1;
       } else {
-        m.items.push({ name: prod.name, price: prod.price, qty: 1 });
+        m.items.push({ name: plato.name, price: plato.price, qty: 1 });
       }
 
       localStorage.setItem("salome_mesas", JSON.stringify(mesas));
       actualizarBarraFlotante();
-      notify(`+1 ${prod.name}`);
+      aviso(`+1 ${plato.name}`);
     }
 
-    /* BURBUJA FLOTANTE */
     function actualizarBarraFlotante() {
-      const pill = document.getElementById('floating-cart-pill');
-      const m = mesas.find(x => x.id === mesaActivaId);
+      const pill = document.getElementById('barra-flotante');
+      const m = mesas.find(x => x.id === mesaActiva);
 
-      if (!m || m.items.length === 0 || document.getElementById('view-comanda').classList.contains('active')) {
+      if (!m || m.items.length === 0 || document.getElementById('vista-comanda').classList.contains('activa')) {
         pill.style.display = 'none';
         return;
       }
 
-      const totalCant = m.items.reduce((a, b) => a + b.qty, 0);
+      const totalItems = m.items.reduce((a, b) => a + b.qty, 0);
       const subtotal = m.items.reduce((a, b) => a + (b.price * b.qty), 0);
 
-      document.getElementById('floating-cart-qty').innerText = `${totalCant} ${totalCant === 1 ? 'plato' : 'platos'} en Mesa ${mesaActivaId}`;
-      document.getElementById('floating-cart-total').innerText = `${fmt(subtotal)} ›`;
+      document.getElementById('txt-flotante-platos').innerText = `${totalItems} ${totalItems === 1 ? 'plato' : 'platos'} en Mesa ${mesaActiva}`;
+      document.getElementById('txt-flotante-total').innerText = `${fmt(subtotal)} ›`;
       pill.style.display = 'flex';
     }
 
-    /* SALÓN DE MESAS */
+    /* MESAS */
     function dibujarMesas() {
-      const grid = document.getElementById('tables-grid-container');
+      const grid = document.getElementById('contenedor-mesas');
       grid.innerHTML = '';
 
       mesas.forEach(m => {
@@ -870,13 +827,13 @@
         const total = m.items.reduce((a, b) => a + (b.price * b.qty), 0);
 
         const box = document.createElement('div');
-        box.className = `table-box ${m.id === mesaActivaId ? 'active' : ''} ${isBusy ? 'busy' : ''}`;
+        box.className = `mesa-cuadro ${m.id === mesaActiva ? 'activa' : ''} ${isBusy ? 'ocupada' : ''}`;
         box.onclick = () => {
-          mesaActivaId = m.id;
-          document.getElementById('header-mesa-indicator').innerText = `Mesa ${m.id}`;
+          mesaActiva = m.id;
+          document.getElementById('header-mesa-pill').innerText = `Mesa ${m.id}`;
           dibujarMesas();
-          if (usuarioRol === 'cliente') cambiarVista('menu');
-          else cambiarVista('comanda');
+          if (rolActual === 'cliente') mostrarVista('menu');
+          else mostrarVista('comanda');
         };
 
         box.innerHTML = `
@@ -896,22 +853,22 @@
 
     /* COMANDA */
     function dibujarComanda() {
-      const m = mesas.find(x => x.id === mesaActivaId);
-      document.getElementById('comanda-mesa-title').innerText = `Mesa ${mesaActivaId}`;
-      const wrap = document.getElementById('comanda-items-wrapper');
+      const m = mesas.find(x => x.id === mesaActiva);
+      document.getElementById('titulo-comanda-mesa').innerText = `Mesa ${mesaActiva}`;
+      const wrap = document.getElementById('contenedor-items-comanda');
       wrap.innerHTML = '';
 
       let subtotal = 0;
 
       if (m.items.length === 0) {
         wrap.innerHTML = `<div style="text-align:center; color:var(--muted); padding:30px 0;">No hay consumos en esta mesa.</div>`;
-        document.getElementById('comanda-total-number').innerText = '$0';
+        document.getElementById('txt-comanda-total').innerText = '$0';
         return;
       }
 
       m.items.forEach(it => {
-        const itemTot = it.price * it.qty;
-        subtotal += itemTot;
+        const totalFila = it.price * it.qty;
+        subtotal += totalFila;
 
         const row = document.createElement('div');
         row.style.display = 'flex';
@@ -923,22 +880,22 @@
         row.innerHTML = `
           <div>
             <div style="font-weight:800; font-size:0.95rem;">${it.name}</div>
-            <div style="font-size:0.8rem; color:var(--muted);">${it.qty} x ${fmt(it.price)} = <strong>${fmt(itemTot)}</strong></div>
+            <div style="font-size:0.8rem; color:var(--muted);">${it.qty} x ${fmt(it.price)} = <strong>${fmt(totalFila)}</strong></div>
           </div>
           <div style="display:flex; align-items:center; gap:8px;">
-            <button onclick="ajustarCantidad('${it.name}', -1)" style="width:34px; height:34px; border-radius:8px; border:1px solid var(--border); background:#fff; font-weight:900; font-size:1.1rem; cursor:pointer;">-</button>
+            <button onclick="modificarCantidadItem('${it.name}', -1)" style="width:34px; height:34px; border-radius:8px; border:1px solid var(--border); background:#fff; font-weight:900; font-size:1.1rem; cursor:pointer;">-</button>
             <span style="font-weight:900; min-width:18px; text-align:center;">${it.qty}</span>
-            <button onclick="ajustarCantidad('${it.name}', 1)" style="width:34px; height:34px; border-radius:8px; border:1px solid var(--border); background:#fff; font-weight:900; font-size:1.1rem; cursor:pointer;">+</button>
+            <button onclick="modificarCantidadItem('${it.name}', 1)" style="width:34px; height:34px; border-radius:8px; border:1px solid var(--border); background:#fff; font-weight:900; font-size:1.1rem; cursor:pointer;">+</button>
           </div>
         `;
         wrap.appendChild(row);
       });
 
-      document.getElementById('comanda-total-number').innerText = fmt(subtotal);
+      document.getElementById('txt-comanda-total').innerText = fmt(subtotal);
     }
 
-    function ajustarCantidad(nombre, delta) {
-      let m = mesas.find(x => x.id === mesaActivaId);
+    function modificarCantidadItem(nombre, delta) {
+      let m = mesas.find(x => x.id === mesaActiva);
       const it = m.items.find(i => i.name === nombre);
       if (!it) return;
 
@@ -952,17 +909,17 @@
       actualizarBarraFlotante();
     }
 
-    /* MOTOR GENERADOR DE FACTURA */
-    function mostrarFacturaActual(esCobroFinal) {
-      let m = mesas.find(x => x.id === mesaActivaId);
-      if (!m.items.length && !esCobroFinal) return alert('No hay consumos en esta mesa.');
+    /* GENERADOR DE FACTURA */
+    function generarFactura(esCobroDefinitivo) {
+      let m = mesas.find(x => x.id === mesaActiva);
+      if (!m.items.length && !esCobroDefinitivo) return alert('No hay consumos en esta mesa.');
 
       const ahora = new Date();
-      const consecutivo = Math.floor(1000 + Math.random() * 9000);
+      const numRandom = Math.floor(1000 + Math.random() * 9000);
 
-      facturaMemoria = {
-        orden: `FAC-${consecutivo}`,
-        mesa: mesaActivaId,
+      facturaActiva = {
+        orden: `FAC-${numRandom}`,
+        mesa: mesaActiva,
         cliente: clienteActual.nombre,
         telefono: clienteActual.telefono,
         items: [...m.items],
@@ -971,13 +928,13 @@
         hora: ahora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
 
-      document.getElementById('fac-txt-numero').innerText = `FACTURA: ${facturaMemoria.orden}`;
-      document.getElementById('fac-txt-fechahora').innerText = `${facturaMemoria.fecha} - ${facturaMemoria.hora}`;
-      document.getElementById('fac-txt-mesa').innerText = `MESA: ${facturaMemoria.mesa}`;
-      document.getElementById('fac-txt-cliente').innerText = `CLIENTE: ${facturaMemoria.cliente} (${facturaMemoria.telefono || 'Sin tel'})`;
+      document.getElementById('fac-numero-doc').innerText = `FACTURA: ${facturaActiva.orden}`;
+      document.getElementById('fac-fecha-doc').innerText = `${facturaActiva.fecha} - ${facturaActiva.hora}`;
+      document.getElementById('fac-mesa-doc').innerText = `MESA: ${facturaActiva.mesa}`;
+      document.getElementById('fac-cliente-doc').innerText = `CLIENTE: ${facturaActiva.cliente} (${facturaActiva.telefono || 'Sin tel'})`;
 
-      const tbody = document.getElementById('fac-table-body');
-      tbody.innerHTML = facturaMemoria.items.map(it => `
+      const tbody = document.getElementById('fac-cuerpo-tabla');
+      tbody.innerHTML = facturaActiva.items.map(it => `
         <tr>
           <td><strong>${it.name}</strong></td>
           <td style="text-align:center;">${it.qty}</td>
@@ -986,18 +943,18 @@
         </tr>
       `).join('');
 
-      document.getElementById('fac-val-subtotal').innerText = fmt(facturaMemoria.total);
-      document.getElementById('fac-val-total').innerText = fmt(facturaMemoria.total);
+      document.getElementById('fac-val-sub').innerText = fmt(facturaActiva.total);
+      document.getElementById('fac-val-tot').innerText = fmt(facturaActiva.total);
 
       document.getElementById('modal-factura').style.display = 'flex';
     }
 
-    function procesarCobro() {
-      let m = mesas.find(x => x.id === mesaActivaId);
+    function cobrarOPedir() {
+      let m = mesas.find(x => x.id === mesaActiva);
       if (!m.items.length) return alert('La mesa no tiene consumos.');
 
-      if (usuarioRol === 'cliente') {
-        mostrarFacturaActual(false);
+      if (rolActual === 'cliente') {
+        generarFactura(false);
         return;
       }
 
@@ -1006,12 +963,12 @@
       let ventas = JSON.parse(localStorage.getItem("salome_ventas") || "[]");
       const nuevoId = ventas.length + 1;
 
-      mostrarFacturaActual(true);
-      document.getElementById('fac-txt-numero').innerText = `FACTURA: FAC-00${nuevoId}`;
+      generarFactura(true);
+      document.getElementById('fac-numero-doc').innerText = `FACTURA: FAC-00${nuevoId}`;
 
       ventas.push({
         id: nuevoId,
-        mesa: mesaActivaId,
+        mesa: mesaActiva,
         cliente: clienteActual.nombre,
         items: m.items.map(i => `${i.qty}x ${i.name} (${fmt(i.price)})`).join(', '),
         total: total,
@@ -1025,46 +982,46 @@
 
       dibujarComanda();
       actualizarBarraFlotante();
-      notify(`Mesa ${mesaActivaId} cobrada con éxito`);
+      aviso(`Mesa ${mesaActiva} cobrada con éxito`);
     }
 
     function cerrarFacturaModal() {
       document.getElementById('modal-factura').style.display = 'none';
     }
 
-    /* GENERACIÓN DIRECTA DE PDF REAL */
-    function descargarFacturaPDF() {
-      const elemento = document.getElementById('factura-print-area');
+    /* DESCARGA DE FACTURA EN PDF REAL (.PDF) */
+    function descargarPDFReal() {
+      const elemento = document.getElementById('area-factura-pdf');
       const opt = {
         margin:       [10, 10, 10, 10],
-        filename:     `Factura_${facturaMemoria ? facturaMemoria.orden : 'Salome'}.pdf`,
+        filename:     `Factura_${facturaActiva ? facturaActiva.orden : 'Salome'}.pdf`,
         image:        { type: 'jpeg', quality: 0.98 },
         html2canvas:  { scale: 2, useCORS: true },
         jsPDF:        { unit: 'mm', format: [80, 200], orientation: 'portrait' }
       };
 
-      notify('Generando documento PDF...');
+      aviso('Generando archivo PDF...');
       html2pdf().set(opt).from(elemento).save();
     }
 
     /* ENVIAR FACTURA A WHATSAPP */
-    function compartirFacturaWs() {
-      if (!facturaMemoria) return;
+    function enviarFacturaWhatsApp() {
+      if (!facturaActiva) return;
       let msg = `*🧾 FACTURA DE VENTA - LAS DELICIAS DE SALOMÉ*\n`;
       msg += `NIT: 901.458.723-1\n`;
-      msg += `${facturaMemoria.orden}\n`;
-      msg += `Cliente: ${facturaMemoria.cliente}\n`;
-      msg += `Mesa: ${facturaMemoria.mesa} | ${facturaMemoria.fecha} (${facturaMemoria.hora})\n`;
+      msg += `${facturaActiva.orden}\n`;
+      msg += `Cliente: ${facturaActiva.cliente}\n`;
+      msg += `Mesa: ${facturaActiva.mesa} | ${facturaActiva.fecha} (${facturaActiva.hora})\n`;
       msg += `------------------------------------\n`;
-      msg += `*DETALLE DE CONSUMO:*\n`;
+      msg += `*DETALLE DEL CONSUMO:*\n`;
 
-      facturaMemoria.items.forEach(it => {
+      facturaActiva.items.forEach(it => {
         msg += `• ${it.qty}x ${it.name}\n`;
-        msg += `   Valor Unitario: ${fmt(it.price)} | Subtotal: ${fmt(it.price * it.qty)}\n`;
+        msg += `   Precio: ${fmt(it.price)} | Subtotal: ${fmt(it.price * it.qty)}\n`;
       });
 
       msg += `------------------------------------\n`;
-      msg += `*TOTAL A PAGAR: ${fmt(facturaMemoria.total)}*\n`;
+      msg += `*TOTAL A PAGAR: ${fmt(facturaActiva.total)}*\n`;
       msg += `------------------------------------\n`;
       msg += `¡Muchas gracias por su preferencia! 🥘`;
 
@@ -1075,15 +1032,15 @@
     function dibujarCierre() {
       let ventas = JSON.parse(localStorage.getItem("salome_ventas") || "[]");
       const cobrado = ventas.reduce((a, b) => a + Number(b.total), 0);
-      document.getElementById('kpi-total-cobrado').innerText = fmt(cobrado);
-      document.getElementById('kpi-conteo-cuentas').innerText = `${ventas.length} cuentas cobradas hoy`;
+      document.getElementById('kpi-caja-total').innerText = fmt(cobrado);
+      document.getElementById('kpi-caja-conteo').innerText = `${ventas.length} cuentas cobradas hoy`;
     }
 
-    function enviarReporteWs() {
+    function enviarCierreWhatsApp() {
       let ventas = JSON.parse(localStorage.getItem("salome_ventas") || "[]");
       if (ventas.length === 0) return alert('No hay ventas registradas hoy.');
 
-      const phone = document.getElementById('admin-ws-input').value.trim();
+      const phone = document.getElementById('ws-admin-tel').value.trim();
       if (!phone) return alert('Ingresa el número de WhatsApp con código de país (ej: 573001234567).');
 
       localStorage.setItem("salome_ws_phone", phone);
@@ -1101,7 +1058,7 @@
       window.open(`https://api.whatsapp.com/send?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(msg)}`, '_blank');
     }
 
-    function exportarExcelVentas() {
+    function exportarVentasExcel() {
       let ventas = JSON.parse(localStorage.getItem("salome_ventas") || "[]");
       if (ventas.length === 0) return alert('No hay ventas registradas.');
 
@@ -1134,15 +1091,15 @@
       XLSX.writeFile(wb, `Ventas_${new Date().toISOString().slice(0, 10)}.xlsx`);
     }
 
-    function reiniciarCajaDiaria() {
+    function reiniciarCaja() {
       if (confirm('¿Seguro que deseas reiniciar el arqueo a $0?')) {
         localStorage.removeItem("salome_ventas");
         dibujarCierre();
-        notify('Caja reiniciada a $0');
+        aviso('Caja reiniciada a $0');
       }
     }
 
-    // Arranque
+    // Arranque inicial
     dibujarMenu();
     dibujarMesas();
   </script>
