@@ -3,8 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Las Delicias de Salomé - POS</title>
+
+  <!-- SheetJS para exportación a Excel -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
   <style>
     :root {
       --bg: #0d1117;
@@ -15,70 +20,444 @@
       --primary-glow: rgba(234, 88, 12, 0.35);
       --amber: #f59e0b;
       --green: #10b981;
+      --green-glow: rgba(16, 185, 129, 0.25);
+      --red: #ef4444;
       --text: #f8fafc;
       --text-muted: #94a3b8;
       --border: rgba(255, 255, 255, 0.08);
       --radius: 14px;
       --radius-sm: 8px;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; user-select: none; }
-    body { background: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-    header { background: linear-gradient(180deg, #18202c 0%, #121720 100%); padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
-    .brand-title { font-size: 1.05rem; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px; }
-    .brand-badge { background: linear-gradient(135deg, #ea580c, #f59e0b); color: #fff; font-size: 0.65rem; font-weight: 900; padding: 2px 7px; border-radius: 6px; }
-    .status-pill { font-size: 0.8rem; font-weight: 700; background: rgba(245, 158, 11, 0.15); color: #fbbf24; padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(245, 158, 11, 0.3); display: flex; align-items: center; gap: 6px; }
-    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #f59e0b; }
-    .view-container { flex: 1; overflow-y: auto; display: none; padding: 16px; }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    header {
+      background: linear-gradient(180deg, #18202c 0%, #121720 100%);
+      padding: 14px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      z-index: 10;
+    }
+
+    .brand-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .brand-badge {
+      background: linear-gradient(135deg, #ea580c, #f59e0b);
+      color: #fff;
+      font-size: 0.65rem;
+      font-weight: 900;
+      padding: 2px 7px;
+      border-radius: 6px;
+      text-transform: uppercase;
+    }
+
+    .status-pill {
+      font-size: 0.8rem;
+      font-weight: 700;
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      padding: 5px 12px;
+      border-radius: 20px;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #f59e0b;
+      box-shadow: 0 0 8px #f59e0b;
+    }
+
+    .view-container {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      display: none;
+      padding: 16px;
+    }
     .view-container.active { display: block; }
-    .section-title { font-size: 0.85rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 14px; display: flex; justify-content: space-between; }
-    .tables-grid { display: grid; grid-template-columns: repeat(2, minmax(135px, 1fr)); gap: 12px; }
-    .table-card { background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 14px; display: flex; flex-direction: column; justify-content: space-between; min-height: 110px; cursor: pointer; }
-    .table-card.occupied { background: linear-gradient(145deg, #242419 0%, #1e1d14 100%); border-color: rgba(245, 158, 11, 0.5); }
-    .table-card.selected { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-glow); }
-    .table-card-top { display: flex; justify-content: space-between; align-items: center; }
-    .badge-pill { font-size: 0.65rem; font-weight: 800; padding: 3px 8px; border-radius: 12px; }
+
+    .section-title {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .tables-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(135px, 1fr));
+      gap: 12px;
+    }
+    .table-card {
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 110px;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.15s ease;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+    }
+    .table-card:active { transform: scale(0.97); }
+    .table-card.occupied {
+      background: linear-gradient(145deg, #242419 0%, #1e1d14 100%);
+      border-color: rgba(245, 158, 11, 0.5);
+    }
+    .table-card.selected {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px var(--primary-glow);
+    }
+
+    .table-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .table-name { font-size: 1.05rem; font-weight: 800; }
+    .badge-pill {
+      font-size: 0.65rem;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 12px;
+      text-transform: uppercase;
+    }
     .badge-pill.free { background: rgba(16, 185, 129, 0.15); color: #34d399; }
     .badge-pill.busy { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
-    .table-amount { font-size: 1.15rem; font-weight: 900; margin-top: 6px; }
-    .cat-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 12px; margin-bottom: 12px; }
-    .cat-btn { flex-shrink: 0; padding: 8px 16px; background: var(--card); border: 1px solid var(--border); border-radius: 25px; color: var(--text-muted); font-size: 0.8rem; font-weight: 700; cursor: pointer; }
-    .cat-btn.active { background: linear-gradient(135deg, #ea580c, #f59e0b); color: #fff; }
+
+    .table-amount {
+      font-size: 1.15rem;
+      font-weight: 900;
+      color: #fff;
+      margin-top: 6px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .cat-tabs {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 12px;
+      margin-bottom: 12px;
+      scrollbar-width: none;
+    }
+    .cat-tabs::-webkit-scrollbar { display: none; }
+    .cat-btn {
+      flex-shrink: 0;
+      padding: 8px 16px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 25px;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .cat-btn.active {
+      background: linear-gradient(135deg, #ea580c, #f59e0b);
+      color: #fff;
+      border-color: transparent;
+    }
+
     .menu-list { display: flex; flex-direction: column; gap: 12px; }
-    .menu-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px; display: flex; gap: 12px; align-items: center; cursor: pointer; }
-    .menu-img { width: 78px; height: 78px; border-radius: 10px; object-fit: cover; flex-shrink: 0; }
+    .menu-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      transition: background 0.15s;
+    }
+    .menu-card:active { background: var(--card-hover); }
+
+    .menu-img {
+      width: 78px;
+      height: 78px;
+      border-radius: 10px;
+      object-fit: cover;
+      background: #2a3441;
+      flex-shrink: 0;
+    }
+
     .menu-details { flex: 1; min-width: 0; }
-    .menu-title { font-size: 0.95rem; font-weight: 800; }
-    .menu-desc { font-size: 0.72rem; color: var(--text-muted); margin-top: 3px; }
-    .menu-bottom { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
-    .menu-price { font-size: 1rem; font-weight: 900; color: #34d399; }
-    .btn-add-food { background: rgba(234, 88, 12, 0.15); color: #fb923c; border: 1px solid rgba(234, 88, 12, 0.4); padding: 5px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 800; }
-    .bill-box { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); padding: 16px; display: flex; flex-direction: column; height: 100%; }
-    .bill-items-scroll { flex: 1; overflow-y: auto; margin: 12px 0; }
-    .bill-item-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-    .bill-item-thumb { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; margin-right: 8px; }
+    .menu-title {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .menu-desc {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      line-height: 1.25;
+      margin-top: 3px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .menu-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 8px;
+    }
+    .menu-price { font-size: 1.05rem; font-weight: 900; color: #34d399; }
+    
+    .btn-add-food {
+      background: #ea580c;
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 2px 8px var(--primary-glow);
+    }
+    .btn-add-food:active {
+      transform: scale(0.95);
+      background: #c2410c;
+    }
+
+    .bill-box {
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    .bill-items-scroll {
+      flex: 1;
+      overflow-y: auto;
+      margin: 12px 0;
+      padding-right: 4px;
+    }
+    .bill-item-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      gap: 10px;
+    }
+    .bill-item-thumb {
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      object-fit: cover;
+      flex-shrink: 0;
+      background: #2a3441;
+    }
+    .bill-item-info { flex: 1; min-width: 0; }
+    .bill-item-name {
+      font-size: 0.9rem;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
     .qty-ctrl { display: flex; align-items: center; gap: 8px; }
-    .btn-qty { background: var(--surface); border: 1px solid var(--border); color: #fff; width: 32px; height: 32px; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; }
-    .btn-action { width: 100%; padding: 14px; border: none; border-radius: var(--radius-sm); font-size: 0.95rem; font-weight: 800; color: #fff; cursor: pointer; margin-top: 8px; }
+    .btn-qty {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: #fff;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .btn-qty:active { background: var(--primary); }
+
+    .btn-action {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: #fff;
+      cursor: pointer;
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
     .btn-pay { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
     .btn-print { background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%); }
     .btn-excel { background: linear-gradient(135deg, #107c41 0%, #0d5f32 100%); }
     .btn-danger { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+
     .kpi-mobile { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
-    .kpi-card { background: var(--card); border: 1px solid var(--border); padding: 14px; border-radius: var(--radius); }
-    .kpi-label { font-size: 0.72rem; font-weight: 700; color: var(--text-muted); }
+    .kpi-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 14px;
+      border-radius: var(--radius);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .kpi-label { font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
     .kpi-value { font-size: 1.25rem; font-weight: 900; margin-top: 6px; }
-    nav { background: var(--surface); border-top: 1px solid var(--border); display: flex; height: 62px; flex-shrink: 0; }
-    .tab-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: none; border: none; color: var(--text-muted); font-size: 0.72rem; cursor: pointer; }
+
+    nav {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      height: 62px;
+      flex-shrink: 0;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    .tab-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      font-weight: 600;
+      gap: 3px;
+      cursor: pointer;
+    }
     .tab-btn.active { color: #fb923c; font-weight: 800; }
     .tab-btn span { font-size: 1.25rem; }
-    .modal-sheet { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); display: none; align-items: flex-end; justify-content: center; z-index: 100; }
-    .sheet-content { background: var(--surface); width: 100%; max-width: 500px; border-radius: 20px 20px 0 0; padding: 22px; max-height: 90vh; overflow-y: auto; }
-    .sheet-input { width: 100%; padding: 14px; background: var(--card); border: 1px solid var(--border); color: #fff; border-radius: var(--radius-sm); margin-bottom: 12px; font-size: 1rem; }
-    .quick-vals { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
-    .btn-val { background: var(--card); border: 1px solid var(--border); color: #fff; padding: 12px 6px; border-radius: var(--radius-sm); font-weight: 700; cursor: pointer; }
-    .thermal-paper { background: #fff; color: #000; font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.35; padding: 18px; border-radius: 6px; margin-bottom: 16px; }
-    .t-center { text-align: center; } .t-bold { font-weight: bold; } .t-line { border-top: 1px dashed #444; margin: 8px 0; }
+
+    .modal-sheet {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(5px);
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      z-index: 100;
+    }
+    .sheet-content {
+      background: var(--surface);
+      width: 100%;
+      max-width: 500px;
+      border-radius: 20px 20px 0 0;
+      padding: 22px;
+      border-top: 1px solid var(--border);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .sheet-input {
+      width: 100%;
+      padding: 14px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: #fff;
+      border-radius: var(--radius-sm);
+      margin-bottom: 12px;
+      font-size: 1rem;
+    }
+    .quick-vals {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .btn-val {
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: #fff;
+      padding: 12px 6px;
+      border-radius: var(--radius-sm);
+      font-weight: 700;
+      font-size: 0.88rem;
+      cursor: pointer;
+    }
+
+    .thermal-paper {
+      background: #fff;
+      color: #000;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 12px;
+      line-height: 1.35;
+      padding: 18px;
+      border-radius: 6px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+      margin-bottom: 16px;
+    }
+    .t-center { text-align: center; }
+    .t-bold { font-weight: bold; }
+    .t-line { border-top: 1px dashed #444; margin: 8px 0; }
     .t-row { display: flex; justify-content: space-between; margin-bottom: 3px; }
+
+    /* Mensaje flotante de confirmación */
+    #toast-msg {
+      position: fixed;
+      bottom: 75px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #10b981;
+      color: #fff;
+      font-weight: 800;
+      font-size: 0.85rem;
+      padding: 8px 18px;
+      border-radius: 20px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+      display: none;
+      z-index: 999;
+    }
+
     @media print {
       body * { visibility: hidden !important; }
       #ticket-preview-box, #ticket-preview-box * { visibility: visible !important; }
@@ -89,6 +468,7 @@
   </style>
 </head>
 <body>
+
   <header>
     <div class="brand-title">
       <span>🥘 Las Delicias de Salomé</span>
@@ -96,10 +476,14 @@
     </div>
     <div class="status-pill" id="current-mesa-pill">
       <div class="status-dot"></div>
-      <span>Mesa 1</span>
+      <span id="header-mesa-label">Mesa 1</span>
     </div>
   </header>
 
+  <!-- NOTIFICACIÓN FLOTANTE -->
+  <div id="toast-msg"></div>
+
+  <!-- MESAS -->
   <div class="view-container active" id="view-mesas">
     <div class="section-title">
       <span>Salón Principal</span>
@@ -108,6 +492,7 @@
     <div class="tables-grid" id="tables-grid"></div>
   </div>
 
+  <!-- MENÚ -->
   <div class="view-container" id="view-menu">
     <div class="cat-tabs">
       <button class="cat-btn active" onclick="filterCategory('todos')">🔥 Todos</button>
@@ -116,12 +501,15 @@
       <button class="cat-btn" onclick="filterCategory('bebidas')">🥤 Bebidas</button>
       <button class="cat-btn" onclick="filterCategory('adiciones')">🍟 Adiciones</button>
     </div>
+
     <button class="btn-action" style="background:linear-gradient(135deg, #059669, #10b981); margin-bottom:12px;" onclick="openManualModal()">
       ✏️ Agregar Plato o Valor Manual
     </button>
+
     <div class="menu-list" id="menu-list"></div>
   </div>
 
+  <!-- COMANDA -->
   <div class="view-container" id="view-comanda">
     <div class="bill-box">
       <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -133,7 +521,9 @@
           + Agregar Más Platos
         </button>
       </div>
+
       <div class="bill-items-scroll" id="bill-items"></div>
+      
       <div style="border-top:1px dashed var(--border); padding-top:12px; margin-top:auto;">
         <div style="display:flex; justify-content:space-between; font-size:0.85rem; color:var(--text-muted);">
           <span>Subtotal:</span><span id="subtotal-val" style="font-weight:700;">$0</span>
@@ -145,17 +535,20 @@
           <span>TOTAL A COBRAR:</span><span id="total-val">$0</span>
         </div>
       </div>
+
       <button class="btn-action btn-pay" onclick="cobrarMesa()">💵 Cobrar y Liberar Mesa</button>
       <button class="btn-action btn-print" onclick="abrirModalTolete()">🖨️ Ver Tolete / Imprimir</button>
       <button class="btn-action btn-danger" onclick="vaciarMesa()">Vaciar Comanda</button>
     </div>
   </div>
 
+  <!-- CIERRE -->
   <div class="view-container" id="view-cierre">
     <div class="section-title">Resumen de Caja Diario</div>
+
     <div class="kpi-mobile">
       <div class="kpi-card" style="grid-column:span 2; background: linear-gradient(135deg, #1c2636 0%, #152c24 100%);">
-        <div class="kpi-label" style="color:#6ee7b7;">Total General del Día</div>
+        <div class="kpi-label" style="color:#6ee7b7;">Total General del Día (En Caja + Mesas)</div>
         <div id="kpi-total-dia" class="kpi-value" style="color:#34d399; font-size:1.6rem;">$0</div>
       </div>
       <div class="kpi-card">
@@ -175,11 +568,13 @@
         <div id="kpi-num-ventas" class="kpi-value">0</div>
       </div>
     </div>
+
     <button class="btn-action btn-excel" onclick="exportarExcelSheetJS()">📥 Descargar Reporte Oficial (.xlsx)</button>
     <button class="btn-action" style="background:#0f766e;" onclick="cobrarTodasLasMesas()">⚡ Cobrar Todas las Mesas Abiertas</button>
     <button class="btn-action btn-danger" onclick="reiniciarCajaDia()">Reiniciar Balance del Día a $0</button>
   </div>
 
+  <!-- NAVEGACIÓN -->
   <nav class="no-print">
     <button class="tab-btn active" onclick="switchView('mesas')"><span>🪑</span>Mesas</button>
     <button class="tab-btn" onclick="switchView('menu')"><span>📋</span>Menú</button>
@@ -187,11 +582,13 @@
     <button class="tab-btn" onclick="switchView('cierre')"><span>📊</span>Cierre</button>
   </nav>
 
+  <!-- MODAL MANUAL -->
   <div class="modal-sheet no-print" id="modal-manual">
     <div class="sheet-content">
-      <h3 style="margin-bottom:14px;">Agregar Valor Manual</h3>
+      <h3 style="margin-bottom:14px; font-weight:800;">Agregar Valor Manual</h3>
       <input type="text" id="manual-name" class="sheet-input" placeholder="Nombre (ej: Almuerzo Especial)">
-      <input type="number" id="manual-price" class="sheet-input" placeholder="Precio ($)">
+      <input type="number" id="manual-price" class="sheet-input" placeholder="Precio ($)" inputmode="numeric">
+
       <div class="quick-vals">
         <button class="btn-val" onclick="setManualPrice(12000)">$12k</button>
         <button class="btn-val" onclick="setManualPrice(15000)">$15k</button>
@@ -200,18 +597,22 @@
         <button class="btn-val" onclick="setManualPrice(20000)">$20k</button>
         <button class="btn-val" onclick="setManualPrice(25000)">$25k</button>
       </div>
+
       <button class="btn-action btn-pay" onclick="confirmManual()">Agregar a la Mesa</button>
-      <button class="btn-action" style="background:var(--card);" onclick="closeManualModal()">Cancelar</button>
+      <button class="btn-action" style="background:var(--card); margin-top:8px;" onclick="closeManualModal()">Cancelar</button>
     </div>
   </div>
 
+  <!-- MODAL TIRILLA -->
   <div class="modal-sheet" id="modal-ticket">
     <div class="sheet-content">
-      <h3 class="no-print" style="margin-bottom:14px; display:flex; justify-content:space-between;">
+      <h3 class="no-print" style="margin-bottom:14px; display:flex; justify-content:space-between; align-items:center;">
         <span>Tirilla Térmica (Tolete)</span>
-        <button style="background:none; border:none; color:#fff; font-size:1.3rem; cursor:pointer;" onclick="cerrarModalTolete()">✕</button>
+        <button style="background:none; border:none; color:var(--text-muted); font-size:1.3rem; cursor:pointer;" onclick="cerrarModalTolete()">✕</button>
       </h3>
+
       <div class="thermal-paper" id="ticket-preview-box"></div>
+
       <div class="no-print">
         <button class="btn-action btn-print" onclick="ejecutarImpresion()">🖨️ Mandar a Impresora Térmica</button>
         <button class="btn-action" style="background:#25d366;" onclick="compartirWhatsApp()">📲 Enviar por WhatsApp</button>
@@ -227,14 +628,17 @@
       try {
         const res = await fetch(`${API_URL}/mesas`);
         const data = await res.json();
-        return data.map(m => ({
-          id: m.id,
-          items: typeof m.items === 'string' ? JSON.parse(m.items) : (m.items || [])
-        }));
+        if (Array.isArray(data) && data.length > 0) {
+          return data.map(m => ({
+            id: Number(m.id),
+            items: typeof m.items === 'string' ? JSON.parse(m.items) : (m.items || [])
+          }));
+        }
       } catch (e) {
-        const local = localStorage.getItem("salome_mesas");
-        return local ? JSON.parse(local) : Array.from({ length: 8 }, (_, i) => ({ id: i + 1, items: [] }));
+        console.warn("Usando respaldo local:", e);
       }
+      const local = localStorage.getItem("salome_mesas");
+      return local ? JSON.parse(local) : Array.from({ length: 8 }, (_, i) => ({ id: i + 1, items: [] }));
     }
 
     async function saveMesaToStorage(mesa) {
@@ -246,7 +650,7 @@
           body: JSON.stringify({ id: mesa.id, items: mesa.items })
         });
       } catch (e) {
-        console.warn("Error sincronizando mesa:", e);
+        console.warn("Fallo sincronizar mesa:", e);
       }
     }
 
@@ -262,7 +666,7 @@
           body: JSON.stringify(venta)
         });
       } catch (e) {
-        console.warn("Error guardando venta:", e);
+        console.warn("Fallo guardar venta:", e);
       }
     }
 
@@ -284,7 +688,7 @@
       try {
         await fetch(`${API_URL}/ventas`, { method: 'DELETE' });
       } catch (e) {
-        console.warn("Error al reiniciar ventas:", e);
+        console.warn("Fallo limpiar ventas:", e);
       }
     }
 
@@ -293,22 +697,109 @@
     let selectedCategory = 'todos';
     const fmt = (v) => '$' + Number(v || 0).toLocaleString('es-CO');
 
+    function showToast(txt) {
+      const t = document.getElementById('toast-msg');
+      t.innerText = txt;
+      t.style.display = 'block';
+      setTimeout(() => { t.style.display = 'none'; }, 1800);
+    }
+
     const MENU_BASE = [
-      { name: "Desayuno Completo", price: 15000, cat: "desayunos", desc: "Huevos al gusto, café con leche o chocolate, queso y arepa campesina", img: "https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=300&q=80" },
-      { name: "Calentado Paisa", price: 16000, cat: "desayunos", desc: "Frijoles, arroz, carne desmechada, huevo frito y arepa blanca", img: "https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?auto=format&fit=crop&w=300&q=80" },
-      { name: "Almuerzo Ejecutivo", price: 15000, cat: "almuerzos", desc: "Sopa del día, proteína del día, principio, arroz, ensalada y jugo", img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=300&q=80" },
-      { name: "Almuerzo Especial (Churrasco)", price: 22000, cat: "almuerzos", desc: "Corte de carne tierna a la plancha con papas y ensalada", img: "https://images.unsplash.com/photo-1558030006-450675393462?auto=format&fit=crop&w=300&q=80" },
-      { name: "Pechuga a la Plancha", price: 18000, cat: "almuerzos", desc: "Filete de pechuga marinada, patacones crocantes y ensalada", img: "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&w=300&q=80" },
-      { name: "Jugo Natural", price: 5000, cat: "bebidas", desc: "Mora, Mango, Maracuyá o Lulo", img: "https://images.unsplash.com/photo-1613478223719-2ab802602423?auto=format&fit=crop&w=300&q=80" },
-      { name: "Café con Leche", price: 3500, cat: "bebidas", desc: "Café de origen colombiano recién colado", img: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=300&q=80" },
-      { name: "Cerveza Nacional Fría", price: 6000, cat: "bebidas", desc: "Club Colombia, Águila o Poker (Botella 330ml)", img: "https://images.unsplash.com/photo-1608270192770-5b43da1e6ea2?auto=format&fit=crop&w=300&q=80" },
-      { name: "Gaseosa 400ml", price: 4000, cat: "bebidas", desc: "Coca-Cola o Postobón helada", img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=300&q=80" },
-      { name: "Porción de Proteína Extra", price: 8000, cat: "adiciones", desc: "Porción extra de carne o chicharrón crocante", img: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=300&q=80" },
-      { name: "Porción de Papas Francesa", price: 6000, cat: "adiciones", desc: "Papas crujientes con sal marina", img: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?auto=format&fit=crop&w=300&q=80" }
+      {
+        id: 1,
+        name: "Desayuno Completo",
+        price: 15000,
+        cat: "desayunos",
+        desc: "Huevos al gusto, chocolate o café, queso fresco y arepa caliente",
+        img: "https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=400&q=80"
+      },
+      {
+        id: 2,
+        name: "Calentado Paisa",
+        price: 16000,
+        cat: "desayunos",
+        desc: "Frijoles refritos con arroz, carne desmechada, huevo frito y arepa paisa",
+        img: "https://images.unsplash.com/photo-1543339308-43e59d6b73a6?auto=format&fit=crop&w=400&q=80"
+      },
+      {
+        id: 3,
+        name: "Almuerzo Ejecutivo",
+        price: 15000,
+        cat: "almuerzos",
+        desc: "Sopa casera, proteína del día, arroz, principio, ensalada y jugo",
+        img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=400&q=80"
+      },
+      {
+        id: 4,
+        name: "Almuerzo Especial (Churrasco)",
+        price: 22000,
+        cat: "almuerzos",
+        desc: "Jugoso corte de carne a la parrilla, papas a la francesa y ensalada",
+        img: "https://images.unsplash.com/photo-1558030006-450675393462?auto=format&fit=crop&w=400&q=80"
+      },
+      {
+        id: 5,
+        name: "Pechuga a la Plancha",
+        price: 18000,
+        cat: "almuerzos",
+        desc: "Filete de pechuga dorada, patacón crocante y ensalada mixta",
+        img: "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&w=400&q=80"
+      },
+      {
+        id: 6,
+        name: "Jugo Natural (Vaso / Jarra)",
+        price: 5000,
+        cat: "bebidas",
+        desc: "Mora, Mango, Maracuyá o Lulo recién licuado en agua o leche",
+        img: "https://images.unsplash.com/photo-1613478223719-2ab802602423?auto=format&fit=crop&w=400&q=80"
+      },
+      {
+        id: 7,
+        name: "Café con Leche / Tinto",
+        price: 3500,
+        cat: "bebidas",
+        desc: "Café colombiano tradicional recién colado caliente",
+        img: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=400&q=80"
+      },
+      {
+        id: 8,
+        name: "Cerveza Fría",
+        price: 6000,
+        cat: "bebidas",
+        desc: "Club Colombia, Águila o Poker bien helada",
+        img: "https://images.unsplash.com/photo-1608270192770-5b43da1e6ea2?auto=format&fit=crop&w=400&q=80"
+      },
+      {
+        id: 9,
+        name: "Gaseosa 400ml",
+        price: 4000,
+        cat: "bebidas",
+        desc: "Coca-Cola, Postobón o Colombiana helada",
+        img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=400&q=80"
+      },
+      {
+        id: 10,
+        name: "Porción de Proteína Extra",
+        price: 8000,
+        cat: "adiciones",
+        desc: "Carne asada, chicharrón crujiente o pechuga",
+        img: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=400&q=80"
+      },
+      {
+        id: 11,
+        name: "Porción de Papas Francesa",
+        price: 6000,
+        cat: "adiciones",
+        desc: "Papas crujientes recién fritas con sal marina",
+        img: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?auto=format&fit=crop&w=400&q=80"
+      }
     ];
 
     async function startApp() {
       mesas = await getMesasFromStorage();
+      if (!mesas.some(m => m.id === activeMesa)) {
+        activeMesa = mesas[0] ? mesas[0].id : 1;
+      }
       renderMesas();
       renderMenu();
       renderComanda();
@@ -317,16 +808,18 @@
     function switchView(viewName) {
       document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
       document.getElementById(`view-${viewName}`).classList.add('active');
       const idx = ['mesas', 'menu', 'comanda', 'cierre'].indexOf(viewName);
       if (idx !== -1) document.querySelectorAll('.tab-btn')[idx].classList.add('active');
+
       if (viewName === 'cierre') renderCierre();
       if (viewName === 'comanda') renderComanda();
     }
 
     function selectMesa(id) {
-      activeMesa = id;
-      document.getElementById('current-mesa-pill').innerHTML = `<div class="status-dot"></div><span>Mesa ${id}</span>`;
+      activeMesa = Number(id);
+      document.getElementById('header-mesa-label').innerText = `Mesa ${id}`;
       document.getElementById('bill-mesa-title').innerText = `Mesa ${id}`;
       renderMesas();
       switchView('comanda');
@@ -336,7 +829,7 @@
       const g = document.getElementById('tables-grid');
       g.innerHTML = '';
       mesas.forEach(m => {
-        const tot = m.items.reduce((a, b) => a + (b.price * b.qty), 0);
+        const tot = m.items.reduce((a, b) => a + (Number(b.price) * Number(b.qty)), 0);
         const card = document.createElement('div');
         const isBusy = m.items.length > 0;
         card.className = `table-card ${isBusy ? 'occupied' : ''} ${m.id === activeMesa ? 'selected' : ''}`;
@@ -350,7 +843,7 @@
             <div style="font-size:0.75rem; color:var(--text-muted); margin-top:6px;">
               ${m.items.length ? m.items.length + ' producto(s)' : 'Sin consumos'}
             </div>
-            <div class="table-amount">${isBusy ? fmt(tot + tot * 0.1) : '-'}</div>
+            <div class="table-amount">${isBusy ? fmt(tot + (tot * 0.1)) : '-'}</div>
           </div>
         `;
         g.appendChild(card);
@@ -371,11 +864,14 @@
     function renderMenu() {
       const l = document.getElementById('menu-list');
       l.innerHTML = '';
-      const filtrados = selectedCategory === 'todos' ? MENU_BASE : MENU_BASE.filter(p => p.cat === selectedCategory);
+
+      const filtrados = selectedCategory === 'todos' 
+        ? MENU_BASE 
+        : MENU_BASE.filter(p => p.cat === selectedCategory);
+
       filtrados.forEach(p => {
         const card = document.createElement('div');
         card.className = 'menu-card';
-        card.onclick = () => addItem(p.name, p.price, 1, p.img);
         card.innerHTML = `
           <img src="${p.img}" class="menu-img" alt="${p.name}" loading="lazy">
           <div class="menu-details">
@@ -383,65 +879,109 @@
             <div class="menu-desc">${p.desc}</div>
             <div class="menu-bottom">
               <span class="menu-price">${fmt(p.price)}</span>
-              <span class="btn-add-food">+ Agregar</span>
+              <button class="btn-add-food" data-id="${p.id}">+ Agregar</button>
             </div>
           </div>
         `;
+
+        // Event listener directo y blindado
+        const btn = card.querySelector('.btn-add-food');
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          addPlatoById(p.id);
+        });
+
         l.appendChild(card);
       });
     }
 
+    async function addPlatoById(id) {
+      const plato = MENU_BASE.find(p => p.id === id);
+      if (!plato) return;
+      await addItem(plato.name, plato.price, 1, plato.img);
+      showToast(`✔ Agregado a Mesa ${activeMesa}`);
+    }
+
     async function addItem(name, price, delta, img) {
-      const m = mesas.find(x => x.id === activeMesa);
-      const ex = m.items.find(i => i.name === name && Number(i.price) === Number(price));
+      let m = mesas.find(x => x.id === activeMesa);
+      if (!m) {
+        m = { id: activeMesa, items: [] };
+        mesas.push(m);
+      }
+
+      const numPrice = Number(price);
+      const ex = m.items.find(i => i.name === name && Number(i.price) === numPrice);
+
       if (ex) {
         ex.qty += delta;
-        if (ex.qty <= 0) m.items = m.items.filter(i => !(i.name === name && Number(i.price) === Number(price)));
+        if (ex.qty <= 0) {
+          m.items = m.items.filter(i => !(i.name === name && Number(i.price) === numPrice));
+        }
       } else if (delta > 0) {
-        const plato = MENU_BASE.find(p => p.name === name);
-        m.items.push({ name, price: Number(price), qty: delta, img: img || (plato ? plato.img : '') });
+        m.items.push({
+          name: name,
+          price: numPrice,
+          qty: delta,
+          img: img || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=150&q=80"
+        });
       }
+
       await saveMesaToStorage(m);
       renderMesas();
       renderComanda();
     }
 
     function renderComanda() {
-      const m = mesas.find(x => x.id === activeMesa);
+      const m = mesas.find(x => x.id === activeMesa) || { id: activeMesa, items: [] };
       const cont = document.getElementById('bill-items');
       cont.innerHTML = '';
-      if (!m.items.length) {
-        cont.innerHTML = `<div style="text-align:center; padding:35px 20px; color:var(--text-muted);"><div style="font-size:2.5rem;">🍽️</div><div>No hay consumos en esta mesa</div></div>`;
-      }
-      let sub = 0;
-      m.items.forEach(it => {
-        sub += it.price * it.qty;
-        const r = document.createElement('div');
-        r.className = 'bill-item-row';
-        r.innerHTML = `
-          <div style="display:flex; align-items:center;">
-            <img src="${it.img || ''}" class="bill-item-thumb">
-            <div>
-              <div style="font-size:0.9rem; font-weight:700;">${it.name}</div>
-              <small style="color:var(--text-muted);">${fmt(it.price)} c/u</small>
-            </div>
-          </div>
-          <div class="qty-ctrl">
-            <button class="btn-qty" onclick="addItem('${it.name}', ${it.price}, -1)">-</button>
-            <span style="font-weight:800;">${it.qty}</span>
-            <button class="btn-qty" onclick="addItem('${it.name}', ${it.price}, 1)">+</button>
+
+      if (!m.items || !m.items.length) {
+        cont.innerHTML = `
+          <div style="text-align:center; padding:35px 20px; color:var(--text-muted);">
+            <div style="font-size:2.5rem; margin-bottom:8px;">🍽️</div>
+            <div style="font-weight:700;">No hay consumos en esta mesa</div>
+            <div style="font-size:0.8rem; margin-top:4px;">Toca "Agregar Más Platos" para registrar comandas</div>
           </div>
         `;
-        cont.appendChild(r);
-      });
+      } else {
+        m.items.forEach(it => {
+          const r = document.createElement('div');
+          r.className = 'bill-item-row';
+          r.innerHTML = `
+            <img src="${it.img || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=150&q=80'}" class="bill-item-thumb" alt="${it.name}">
+            <div class="bill-item-info">
+              <div class="bill-item-name">${it.name}</div>
+              <small style="color:var(--text-muted); font-size:0.8rem;">${fmt(it.price)} c/u</small>
+            </div>
+            <div class="qty-ctrl">
+              <button class="btn-qty btn-minus">-</button>
+              <span style="font-weight:800; font-size:0.95rem; min-width:18px; text-align:center;">${it.qty}</span>
+              <button class="btn-qty btn-plus">+</button>
+            </div>
+          `;
+
+          r.querySelector('.btn-minus').onclick = () => addItem(it.name, it.price, -1, it.img);
+          r.querySelector('.btn-plus').onclick = () => addItem(it.name, it.price, 1, it.img);
+
+          cont.appendChild(r);
+        });
+      }
+
+      const sub = (m.items || []).reduce((a, b) => a + (Number(b.price) * Number(b.qty)), 0);
       const tip = sub * 0.1;
-      document.getElementById('bill-items-count').innerText = `${m.items.length} productos en mesa`;
+
+      document.getElementById('bill-items-count').innerText = `${(m.items || []).length} productos en mesa`;
       document.getElementById('subtotal-val').innerText = fmt(sub);
       document.getElementById('tip-val').innerText = fmt(tip);
       document.getElementById('total-val').innerText = fmt(sub + tip);
     }
 
-    function openManualModal() { document.getElementById('modal-manual').style.display = 'flex'; }
+    function openManualModal() {
+      document.getElementById('manual-name').value = 'Almuerzo Especial';
+      document.getElementById('manual-price').value = '16000';
+      document.getElementById('modal-manual').style.display = 'flex';
+    }
     function closeManualModal() { document.getElementById('modal-manual').style.display = 'none'; }
     function setManualPrice(v) { document.getElementById('manual-price').value = v; }
 
@@ -457,8 +997,8 @@
 
     async function vaciarMesa() {
       const m = mesas.find(x => x.id === activeMesa);
-      if (!m.items.length) return;
-      if (confirm(`¿Vaciar la Mesa ${activeMesa}?`)) {
+      if (!m || !m.items.length) return;
+      if (confirm(`¿Vaciar por completo la Mesa ${activeMesa}?`)) {
         m.items = [];
         await saveMesaToStorage(m);
         renderMesas();
@@ -467,51 +1007,108 @@
     }
 
     function construirContenidoTolete(m) {
-      const sub = m.items.reduce((a, b) => a + (b.price * b.qty), 0);
+      const sub = m.items.reduce((a, b) => a + (Number(b.price) * Number(b.qty)), 0);
       const tip = sub * 0.1;
+      const tot = sub + tip;
+      const fecha = new Date().toLocaleDateString('es-CO');
+      const hora = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
       let rows = '';
       m.items.forEach(it => {
-        rows += `<div class="t-row"><span>${it.qty}x ${it.name}</span><span class="t-bold">${fmt(it.price * it.qty)}</span></div>`;
+        rows += `
+          <div class="t-row">
+            <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding-right:6px;">${it.qty}x ${it.name}</span>
+            <span class="t-bold">${fmt(Number(it.price) * Number(it.qty))}</span>
+          </div>
+        `;
       });
+
       return `
-        <div class="t-center t-bold">LAS DELICIAS DE SALOMÉ</div>
+        <div class="t-center t-bold" style="font-size:13px;">RESTAURANTE LAS DELICIAS DE SALOMÉ</div>
         <div class="t-center">NIT: 900.123.456-7</div>
+        <div class="t-center">TEL: 300 123 4567</div>
         <div class="t-line"></div>
+        <div class="t-row">
+          <span>FECHA: ${fecha}</span>
+          <span>${hora}</span>
+        </div>
         <div class="t-bold">CUENTA: MESA ${m.id}</div>
+        <div class="t-line"></div>
+        <div class="t-row t-bold">
+          <span>DESCRIPCIÓN</span>
+          <span>TOTAL</span>
+        </div>
         <div class="t-line"></div>
         ${rows}
         <div class="t-line"></div>
-        <div class="t-row"><span>Subtotal:</span><span>${fmt(sub)}</span></div>
-        <div class="t-row"><span>Propina (10%):</span><span>${fmt(tip)}</span></div>
-        <div class="t-row t-bold"><span>TOTAL:</span><span>${fmt(sub + tip)}</span></div>
-        <div class="t-center" style="margin-top:8px;">*** GRACIAS POR SU COMPRA ***</div>
+        <div class="t-row">
+          <span>Subtotal:</span>
+          <span>${fmt(sub)}</span>
+        </div>
+        <div class="t-row">
+          <span>Propina Sug. (10%):</span>
+          <span>${fmt(tip)}</span>
+        </div>
+        <div class="t-row t-bold" style="font-size:13px; margin-top:4px;">
+          <span>TOTAL:</span>
+          <span>${fmt(tot)}</span>
+        </div>
+        <div class="t-line"></div>
+        <div class="t-center" style="margin-top:6px;">*** GRACIAS POR SU VISITA ***</div>
       `;
     }
 
     function abrirModalTolete() {
       const m = mesas.find(x => x.id === activeMesa);
-      if (!m || !m.items.length) return alert('No hay consumos en esta mesa.');
+      if (!m || !m.items.length) {
+        alert('No hay consumos en esta mesa.');
+        return;
+      }
       document.getElementById('ticket-preview-box').innerHTML = construirContenidoTolete(m);
       document.getElementById('modal-ticket').style.display = 'flex';
     }
 
-    function cerrarModalTolete() { document.getElementById('modal-ticket').style.display = 'none'; }
-    function ejecutarImpresion() { window.print(); }
+    function cerrarModalTolete() {
+      document.getElementById('modal-ticket').style.display = 'none';
+    }
+
+    function ejecutarImpresion() {
+      window.print();
+    }
 
     function compartirWhatsApp() {
       const m = mesas.find(x => x.id === activeMesa);
       if (!m || !m.items.length) return;
-      const sub = m.items.reduce((a, b) => a + (b.price * b.qty), 0);
+
+      const sub = m.items.reduce((a, b) => a + (Number(b.price) * Number(b.qty)), 0);
       const tip = sub * 0.1;
-      let msg = `*LAS DELICIAS DE SALOMÉ*\nCuenta: Mesa ${m.id}\nTotal: ${fmt(sub + tip)}`;
-      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+      const tot = sub + tip;
+      
+      let msg = `*RESTAURANTE LAS DELICIAS DE SALOMÉ*\n`;
+      msg += `Cuenta: Mesa ${m.id}\n`;
+      msg += `Fecha: ${new Date().toLocaleDateString('es-CO')} ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}\n`;
+      msg += `--------------------------\n`;
+      m.items.forEach(it => {
+        msg += `${it.qty}x ${it.name} = ${fmt(Number(it.price) * Number(it.qty))}\n`;
+      });
+      msg += `--------------------------\n`;
+      msg += `Subtotal: ${fmt(sub)}\n`;
+      msg += `Propina (10%): ${fmt(tip)}\n`;
+      msg += `*TOTAL: ${fmt(tot)}*\n`;
+      msg += `\n¡Muchas gracias por su preferencia!`;
+
+      const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
+      window.open(url, '_blank');
     }
 
     async function cobrarMesa() {
       const m = mesas.find(x => x.id === activeMesa);
-      if (!m.items.length) return alert('No hay consumos.');
-      const sub = m.items.reduce((a, b) => a + (b.price * b.qty), 0);
+      if (!m || !m.items.length) return alert('No hay consumos en esta mesa.');
+
+      const sub = m.items.reduce((a, b) => a + (Number(b.price) * Number(b.qty)), 0);
       const tip = sub * 0.1;
+      const tot = sub + tip;
+
       await saveVentaToStorage({
         fecha: new Date().toLocaleDateString('es-CO'),
         hora: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -519,46 +1116,157 @@
         items: [...m.items],
         subtotal: sub,
         tip: tip,
-        total: sub + tip
+        total: tot
       });
+
       m.items = [];
       await saveMesaToStorage(m);
       renderMesas();
       renderComanda();
-      alert('✅ Mesa cobrada y guardada en la base de datos.');
+      alert(`✅ Mesa ${activeMesa} cobrada exitosamente por ${fmt(tot)}.`);
     }
 
     async function renderCierre() {
       const ventas = await getVentasFromStorage();
       const yaCobrado = ventas.reduce((a, b) => a + Number(b.total), 0);
       const propCob = ventas.reduce((a, b) => a + Number(b.tip), 0);
+
       let pendiente = 0;
+      let propPend = 0;
+
       mesas.forEach(m => {
-        const sub = m.items.reduce((a, b) => a + (b.price * b.qty), 0);
-        pendiente += (sub + sub * 0.1);
+        const sub = m.items.reduce((a, b) => a + (Number(b.price) * Number(b.qty)), 0);
+        pendiente += (sub + (sub * 0.1));
+        propPend += (sub * 0.1);
       });
+
       document.getElementById('kpi-total-dia').innerText = fmt(yaCobrado + pendiente);
       document.getElementById('kpi-cobrado').innerText = fmt(yaCobrado);
       document.getElementById('kpi-pendiente').innerText = fmt(pendiente);
-      document.getElementById('kpi-propinas').innerText = fmt(propCob);
+      document.getElementById('kpi-propinas').innerText = fmt(propCob + propPend);
       document.getElementById('kpi-num-ventas').innerText = ventas.length;
     }
 
+    async function cobrarTodasLasMesas() {
+      const ocupadas = mesas.filter(m => m.items.length > 0);
+      if (!ocupadas.length) return alert('No hay mesas ocupadas.');
+
+      if (confirm(`¿Cobrar y cerrar las ${ocupadas.length} mesas abiertas?`)) {
+        for (const m of ocupadas) {
+          const sub = m.items.reduce((a, b) => a + (Number(b.price) * Number(b.qty)), 0);
+          const tip = sub * 0.1;
+          await saveVentaToStorage({
+            fecha: new Date().toLocaleDateString('es-CO'),
+            hora: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            mesaId: m.id,
+            items: [...m.items],
+            subtotal: sub,
+            tip: tip,
+            total: sub + tip
+          });
+          m.items = [];
+          await saveMesaToStorage(m);
+        }
+        renderMesas();
+        renderCierre();
+        alert('✅ Todas las mesas quedaron archivadas.');
+      }
+    }
+
     async function exportarExcelSheetJS() {
-      const ventas = await getVentasFromStorage();
-      if (!ventas.length) return alert('No hay ventas registradas.');
-      const filas = [["Fecha", "Hora", "Mesa", "Total"]];
-      ventas.forEach(v => filas.push([v.fecha, v.hora, v.mesa_id || v.mesaId, v.total]));
-      const ws = XLSX.utils.aoa_to_sheet(filas);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Ventas");
-      XLSX.writeFile(wb, "Ventas_Salome.xlsx");
+      try {
+        if (typeof XLSX === 'undefined') {
+          alert('Error: No se pudo cargar la librería de Excel.');
+          return;
+        }
+
+        const ventas = await getVentasFromStorage();
+        if (!ventas.length) {
+          alert('⚠️ Atención: Aún no has cobrado ninguna mesa hoy.');
+          return;
+        }
+
+        let totalSub = 0;
+        let totalTip = 0;
+        let totalGen = 0;
+
+        const filasExcel = [
+          ["RESTAURANTE LAS DELICIAS DE SALOMÉ"],
+          ["Reporte Oficial de Ventas Diarias"],
+          [`Generado el: ${new Date().toLocaleDateString('es-CO')} ${new Date().toLocaleTimeString()}`],
+          [],
+          ["# Venta", "Fecha", "Hora", "Mesa", "Detalle de Platos", "Subtotal ($)", "Propina ($)", "Total Cobrado ($)"]
+        ];
+
+        ventas.forEach((v, idx) => {
+          const sub = Number(v.subtotal || 0);
+          const tip = Number(v.tip || 0);
+          const tot = Number(v.total || 0);
+
+          totalSub += sub;
+          totalTip += tip;
+          totalGen += tot;
+
+          const productos = v.items.map(i => `${i.qty}x ${i.name}`).join(' | ');
+
+          filasExcel.push([
+            idx + 1,
+            v.fecha,
+            v.hora,
+            `Mesa ${v.mesaId}`,
+            productos,
+            sub,
+            tip,
+            tot
+          ]);
+        });
+
+        filasExcel.push([
+          "TOTALES",
+          "",
+          "",
+          "",
+          "",
+          totalSub,
+          totalTip,
+          totalGen
+        ]);
+
+        const ws = XLSX.utils.aoa_to_sheet(filasExcel);
+        ws['!cols'] = [
+          { wch: 8 }, { wch: 12 }, { wch: 10 }, { wch: 10 },
+          { wch: 35 }, { wch: 14 }, { wch: 14 }, { wch: 16 }
+        ];
+
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Ventas_Diarias");
+
+        const nombreArchivo = `Ventas_Salome_${new Date().toISOString().slice(0,10)}.xlsx`;
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const file = new File([blob], nombreArchivo, { type: blob.type });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: 'Reporte de Ventas Salomé',
+            text: `Reporte de ventas del día - ${new Date().toLocaleDateString('es-CO')}`
+          });
+        } else {
+          XLSX.writeFile(wb, nombreArchivo);
+        }
+
+      } catch (err) {
+        console.error("Error al exportar Excel:", err);
+        alert("Ocurrió un error al procesar el archivo: " + err.message);
+      }
     }
 
     async function reiniciarCajaDia() {
-      if (confirm('¿Reiniciar balance de ventas a $0?')) {
+      if (confirm('¿Reiniciar todo el historial de ventas del día a $0?')) {
         await clearVentasStorage();
         renderCierre();
+        alert('Caja reiniciada a $0.');
       }
     }
 
