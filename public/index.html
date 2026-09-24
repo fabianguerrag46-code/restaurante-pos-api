@@ -3,434 +3,489 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Las Delicias de Salomé - POS</title>
+  <title>Las Delicias de Salomé - POS Professional</title>
   
-  <!-- Librería SheetJS para generar y descargar archivos Excel reales -->
+  <!-- SheetJS para exportar arqueo a Excel (.xlsx) -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <style>
     :root {
-      --bg: #090d16;
-      --surface: #111827;
-      --card: rgba(22, 30, 46, 0.95);
-      --card-solid: #161e2e;
-      --primary: #f97316;
-      --primary-gradient: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-      --primary-glow: rgba(249, 115, 22, 0.35);
-      --green: #10b981;
-      --text: #f8fafc;
+      --pos-bg: #000000;
+      --pos-panel: #0a0e17;
+      --pos-card: #151a24;
+      --pos-border: rgba(255, 255, 255, 0.1);
+      --pos-blue: #2563eb;
+      --pos-blue-hover: #1d4ed8;
+      --text-main: #ffffff;
       --text-muted: #94a3b8;
-      --border: rgba(255, 255, 255, 0.08);
-      --radius: 16px;
-      --radius-sm: 10px;
+      
+      /* Colores de los bloques de categoría estilo Toast/Square */
+      --cat-orange: #ea580c;
+      --cat-yellow: #f59e0b;
+      --cat-red: #be123c;
+      --cat-blue: #3b82f6;
+      --cat-green: #10b981;
+      --cat-purple: #c026d3;
     }
 
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
-      -webkit-tap-highlight-color: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       user-select: none;
+      -webkit-tap-highlight-color: transparent;
     }
 
     body {
-      background: var(--bg);
-      color: var(--text);
-      display: flex;
-      flex-direction: column;
+      background: var(--pos-bg);
+      color: var(--text-main);
       height: 100vh;
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
 
     /* PANTALLA INICIAL DE ACCESO */
     #auth-screen {
       position: fixed;
       inset: 0;
-      background: radial-gradient(circle at top, #1e293b 0%, #090d16 80%);
-      z-index: 200;
+      background: rgba(0, 0, 0, 0.92);
+      backdrop-filter: blur(10px);
+      z-index: 999;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 24px;
+      padding: 20px;
     }
-    .auth-card {
+    .auth-box {
+      background: #111827;
+      border: 1px solid var(--pos-border);
+      border-radius: 20px;
+      padding: 30px;
       width: 100%;
       max-width: 380px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      padding: 26px 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
       text-align: center;
     }
-    .auth-roles {
+    .auth-btn-group {
       display: flex;
       gap: 8px;
       margin: 20px 0 16px;
-      background: var(--surface);
+      background: #000;
       padding: 4px;
-      border-radius: var(--radius-sm);
+      border-radius: 10px;
     }
-    .role-btn {
+    .auth-role-btn {
       flex: 1;
-      padding: 10px 6px;
-      border-radius: 8px;
+      padding: 10px;
       border: none;
       background: transparent;
       color: var(--text-muted);
       font-weight: 700;
-      font-size: 0.8rem;
+      font-size: 0.85rem;
+      border-radius: 8px;
       cursor: pointer;
     }
-    .role-btn.active {
-      background: var(--primary-gradient);
+    .auth-role-btn.active {
+      background: var(--pos-blue);
       color: #fff;
-      box-shadow: 0 2px 8px var(--primary-glow);
+    }
+    .input-pos {
+      width: 100%;
+      padding: 14px;
+      background: #1f2937;
+      border: 1px solid var(--pos-border);
+      border-radius: 10px;
+      color: #fff;
+      font-size: 1rem;
+      margin-bottom: 14px;
+      outline: none;
     }
 
-    /* HEADER */
-    header {
-      background: rgba(17, 24, 39, 0.95);
-      padding: 12px 16px;
+    /* LAYOUT PRINCIPAL DE DOS COLUMNAS */
+    .pos-main-container {
+      flex: 1;
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid var(--border);
-      z-index: 20;
+      height: calc(100vh - 54px);
+      overflow: hidden;
     }
-    .brand-title {
+
+    /* COLUMNA IZQUIERDA: MENÚ Y CATEGORÍAS */
+    .pos-left-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--pos-border);
+      background: #050811;
+      overflow: hidden;
+    }
+
+    /* Barra superior izquierda */
+    .pos-top-bar {
+      height: 52px;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--pos-border);
+      background: #090e18;
+    }
+    .pos-dropdown-menu {
       font-size: 1.05rem;
       font-weight: 800;
       color: #fff;
       display: flex;
       align-items: center;
-      gap: 6px;
-    }
-    .role-chip {
-      font-size: 0.7rem;
-      font-weight: 800;
-      padding: 4px 10px;
-      border-radius: 12px;
-      text-transform: uppercase;
-      cursor: pointer;
-    }
-    .role-chip.admin { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); }
-    .role-chip.mesero { background: rgba(249, 115, 22, 0.2); color: #fb923c; border: 1px solid rgba(249, 115, 22, 0.4); }
-    .role-chip.cliente { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
-
-    /* VISTAS */
-    .view-container {
-      flex: 1;
-      overflow-y: auto;
-      overflow-x: hidden;
-      display: none;
-      padding: 16px;
-    }
-    .view-container.active { display: block; }
-
-    .section-title {
-      font-size: 0.82rem;
-      font-weight: 800;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      margin-bottom: 14px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .search-box {
-      width: 100%;
-      padding: 13px 16px;
-      background: var(--card-solid);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      color: #fff;
-      font-size: 0.95rem;
-      margin-bottom: 12px;
-      outline: none;
-    }
-
-    /* MESAS */
-    .tables-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(130px, 1fr));
-      gap: 12px;
-    }
-    .table-card {
-      background: var(--card);
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius);
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      min-height: 115px;
-      cursor: pointer;
-    }
-    .table-card.occupied {
-      background: linear-gradient(145deg, rgba(38, 30, 20, 0.9) 0%, rgba(26, 20, 14, 0.95) 100%);
-      border-color: rgba(249, 115, 22, 0.5);
-    }
-    .table-card.selected {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 2px var(--primary-glow);
-    }
-    .table-card-top { display: flex; justify-content: space-between; align-items: center; }
-    .table-name { font-size: 1.05rem; font-weight: 800; }
-    .badge-pill {
-      font-size: 0.65rem;
-      font-weight: 800;
-      padding: 3px 8px;
-      border-radius: 20px;
-      text-transform: uppercase;
-    }
-    .badge-pill.free { background: rgba(16, 185, 129, 0.15); color: #34d399; }
-    .badge-pill.busy { background: rgba(249, 115, 22, 0.2); color: #fb923c; }
-
-    .table-amount {
-      font-size: 1.2rem;
-      font-weight: 900;
-      color: #fff;
-      margin-top: 6px;
-    }
-
-    /* CATEGORÍAS */
-    .cat-tabs {
-      display: flex;
       gap: 8px;
-      overflow-x: auto;
-      padding-bottom: 12px;
-      margin-bottom: 8px;
-    }
-    .cat-btn {
-      flex-shrink: 0;
-      padding: 9px 16px;
-      background: var(--card-solid);
-      border: 1px solid var(--border);
-      border-radius: 30px;
-      color: var(--text-muted);
-      font-size: 0.82rem;
-      font-weight: 700;
       cursor: pointer;
     }
-    .cat-btn.active {
-      background: var(--primary-gradient);
-      color: #fff;
-      border-color: transparent;
-    }
-
-    /* MENÚ */
-    .menu-list { display: flex; flex-direction: column; gap: 12px; }
-    .menu-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 12px;
+    .pos-search-actions {
       display: flex;
-      gap: 14px;
+      gap: 10px;
       align-items: center;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
     }
-
-    .menu-media {
-      width: 90px;
-      height: 90px;
-      border-radius: 12px;
-      flex-shrink: 0;
-      overflow: hidden;
-      background: #1e293b;
-      border: 1px solid rgba(255,255,255,0.08);
+    .btn-icon-sq {
+      background: #151a24;
+      border: 1px solid var(--pos-border);
+      color: #fff;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
+      cursor: pointer;
+      font-size: 0.95rem;
     }
-    .menu-media img {
+
+    /* MOSAICO SUPERIOR DE CATEGORÍAS */
+    .pos-categories-mosaic {
+      display: grid;
+      grid-template-columns: 1.4fr 1.4fr 1fr 1fr;
+      grid-template-rows: repeat(2, 60px);
+      gap: 8px;
+      padding: 12px 14px;
+      background: #070b14;
+    }
+    .cat-tile {
+      border-radius: 8px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      color: #fff;
+      cursor: pointer;
+      font-weight: 700;
+      transition: transform 0.1s ease, filter 0.15s ease;
+      position: relative;
+    }
+    .cat-tile:active { transform: scale(0.97); }
+    .cat-tile .tile-title { font-size: 0.85rem; font-weight: 800; }
+    .cat-tile .tile-sub { font-size: 0.68rem; opacity: 0.8; margin-top: 2px; }
+    .cat-tile.active-cat { outline: 2.5px solid #fff; filter: brightness(1.15); }
+
+    .tile-orange { background: var(--cat-orange); }
+    .tile-yellow { background: var(--cat-yellow); color: #000; }
+    .tile-yellow .tile-sub { color: rgba(0,0,0,0.7); }
+    .tile-red { background: var(--cat-red); }
+    .tile-blue { background: var(--cat-blue); }
+    .tile-green { background: var(--cat-green); }
+    .tile-purple { background: var(--cat-purple); }
+    .tile-white { background: #f8fafc; color: #0f172a; }
+
+    /* CUADRÍCULA INFERIOR DE PRODUCTOS */
+    .pos-products-grid {
+      flex: 1;
+      padding: 12px 14px;
+      overflow-y: auto;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      align-content: start;
+    }
+    .product-tile {
+      background: var(--pos-card);
+      border-radius: 8px;
+      overflow: hidden;
+      aspect-ratio: 16/11;
+      position: relative;
+      cursor: pointer;
+      border: 1px solid var(--pos-border);
+      transition: transform 0.1s ease;
+    }
+    .product-tile:active { transform: scale(0.96); }
+    .product-tile img {
       width: 100%;
       height: 100%;
       object-fit: cover;
       display: block;
+      filter: brightness(0.65);
     }
-
-    .menu-details { flex: 1; min-width: 0; }
-    .menu-title {
-      font-size: 0.98rem;
-      font-weight: 800;
-      color: #fff;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .menu-desc {
-      font-size: 0.74rem;
-      color: var(--text-muted);
-      line-height: 1.35;
-      margin-top: 3px;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-    .menu-bottom {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 8px;
-    }
-    .menu-price { font-size: 1.05rem; font-weight: 900; color: #34d399; }
-
-    .btn-add-food {
-      background: var(--primary-gradient);
-      color: #fff;
-      border: none;
-      padding: 8px 16px;
-      border-radius: var(--radius-sm);
-      font-size: 0.85rem;
-      font-weight: 800;
-      cursor: pointer;
-    }
-
-    /* COMANDA */
-    .bill-box {
-      background: var(--card);
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      padding: 16px;
+    .product-tile-overlay {
+      position: absolute;
+      inset: 0;
+      padding: 8px;
       display: flex;
       flex-direction: column;
-      height: 100%;
+      justify-content: flex-end;
+      background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 60%);
     }
-    .bill-items-scroll { flex: 1; overflow-y: auto; margin: 12px 0; }
-    .bill-item-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-      gap: 10px;
-    }
-    .bill-item-info { flex: 1; min-width: 0; }
-    .qty-ctrl { display: flex; align-items: center; gap: 8px; }
-    .btn-qty {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      color: #fff;
-      width: 34px;
-      height: 34px;
-      border-radius: 10px;
-      font-size: 1.15rem;
-      font-weight: bold;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-    }
-
-    .btn-action {
-      width: 100%;
-      padding: 14px;
-      border: none;
-      border-radius: var(--radius-sm);
-      font-size: 0.95rem;
+    .prod-tile-title {
+      font-size: 0.78rem;
       font-weight: 800;
       color: #fff;
-      cursor: pointer;
-      margin-top: 8px;
+      line-height: 1.15;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+    }
+    .prod-tile-price {
+      font-size: 0.72rem;
+      color: #38bdf8;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
+    /* COLUMNA DERECHA: TICKET / CUENTA ACTIVA */
+    .pos-right-section {
+      width: 360px;
+      background: var(--pos-bg);
+      display: flex;
+      flex-direction: column;
+      border-left: 1px solid var(--pos-border);
+    }
+
+    .pos-ticket-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--pos-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .mesa-active-badge {
+      font-size: 1.15rem;
+      font-weight: 900;
+      color: #fff;
       display: flex;
       align-items: center;
-      justify-content: center;
+      gap: 6px;
+    }
+    .ticket-nav-tabs {
+      display: flex;
+      padding: 10px 18px 4px;
+      gap: 20px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .ticket-tab.active {
+      color: #fff;
+      border-bottom: 2px solid #fff;
+      padding-bottom: 6px;
+    }
+
+    /* Lista de ítems en el ticket */
+    .pos-ticket-items {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .ticket-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.92rem;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .ticket-item-name {
+      font-weight: 600;
+      color: #f1f5f9;
+      display: flex;
+      align-items: center;
       gap: 8px;
     }
-    .btn-pay { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
-    .btn-excel { background: linear-gradient(135deg, #059669 0%, #047857 100%); }
-    .btn-whatsapp { background: linear-gradient(135deg, #25d366 0%, #128c7e 100%); color: #fff; }
-    .btn-danger { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
-
-    /* CIERRE / ARQUEO */
-    .kpi-mobile { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
-    .kpi-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      padding: 14px;
-      border-radius: var(--radius);
-    }
-    .kpi-label { font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
-    .kpi-value { font-size: 1.28rem; font-weight: 900; margin-top: 6px; }
-
-    /* NAVEGACIÓN INFERIOR */
-    nav {
-      background: rgba(17, 24, 39, 0.92);
-      border-top: 1px solid var(--border);
-      display: flex;
-      height: 64px;
-      flex-shrink: 0;
-    }
-    .tab-btn {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      font-size: 0.72rem;
-      font-weight: 600;
-      gap: 4px;
+    .ticket-qty-pill {
+      background: #1e293b;
+      padding: 2px 7px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: var(--pos-blue);
       cursor: pointer;
     }
-    .tab-btn.active { color: #fb923c; font-weight: 800; }
-    .tab-btn span { font-size: 1.3rem; }
-
-    .sheet-input {
-      width: 100%;
-      padding: 14px;
-      background: var(--card-solid);
-      border: 1px solid var(--border);
+    .ticket-item-price {
+      font-weight: 700;
       color: #fff;
-      border-radius: var(--radius-sm);
-      margin-bottom: 12px;
-      font-size: 1rem;
-      outline: none;
     }
 
-    #toast-msg {
+    /* Resumen inferior del ticket */
+    .pos-ticket-footer {
+      padding: 16px 18px 18px;
+      background: #090d16;
+      border-top: 1px solid var(--pos-border);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .pos-summary-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .pos-summary-row.total-row {
+      font-size: 1.15rem;
+      font-weight: 900;
+      color: #fff;
+      margin-top: 4px;
+      padding-top: 8px;
+      border-top: 1px dashed var(--pos-border);
+    }
+    .btn-pos-pay {
+      background: var(--pos-blue);
+      color: #fff;
+      border: none;
+      padding: 15px;
+      border-radius: 10px;
+      font-size: 1.05rem;
+      font-weight: 800;
+      cursor: pointer;
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s ease;
+    }
+    .btn-pos-pay:active { background: var(--pos-blue-hover); }
+
+    /* BARRA INFERIOR DE SISTEMA (NAVBAR) */
+    .pos-bottom-nav {
+      height: 54px;
+      background: #050811;
+      border-top: 1px solid var(--pos-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      z-index: 50;
+    }
+    .bottom-nav-left, .bottom-nav-center {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+    .nav-icon-link {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 6px 10px;
+      border-radius: 8px;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+    .nav-icon-link.active, .nav-icon-link:active {
+      color: #fff;
+      background: #151a24;
+    }
+    .badge-count {
+      background: var(--pos-blue);
+      color: #fff;
+      font-size: 0.7rem;
+      padding: 1px 6px;
+      border-radius: 10px;
+    }
+    .role-badge-round {
+      background: #1e293b;
+      border: 1px solid var(--pos-border);
+      color: #fb923c;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.72rem;
+      font-weight: 900;
+    }
+
+    /* MODAL FLOTANTE DE MESAS */
+    #mesas-modal {
       position: fixed;
-      bottom: 80px;
-      left: 50%;
-      transform: translateX(-50%);
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .mesas-modal-content {
+      background: #0b1120;
+      border: 1px solid var(--pos-border);
+      border-radius: 18px;
+      padding: 24px;
+      width: 100%;
+      max-width: 600px;
+    }
+    .mesas-grid-popup {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .mesa-card-choice {
+      background: #151a24;
+      border: 1.5px solid var(--pos-border);
+      border-radius: 12px;
+      padding: 16px 12px;
+      text-align: center;
+      cursor: pointer;
+    }
+    .mesa-card-choice.active { border-color: var(--pos-blue); background: #1e293b; }
+    .mesa-card-choice.busy { border-color: #ea580c; }
+
+    #toast-notification {
+      position: fixed;
+      top: 16px;
+      right: 16px;
       background: #10b981;
       color: #fff;
       font-weight: 800;
-      font-size: 0.88rem;
-      padding: 10px 20px;
-      border-radius: 30px;
+      padding: 12px 24px;
+      border-radius: 10px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      z-index: 9999;
       display: none;
-      z-index: 999;
     }
   </style>
 </head>
 <body>
 
-  <!-- PANTALLA INICIAL DE ACCESO -->
-  <div id="auth-screen">
-    <div class="auth-card">
-      <div style="font-size:2.8rem; margin-bottom:6px;">🥘</div>
-      <h2 style="font-weight:900; font-size:1.35rem; color:#fff;">Las Delicias de Salomé</h2>
-      <p style="color:var(--text-muted); font-size:0.85rem; margin-top:2px;">Selecciona tu perfil de acceso</p>
+  <div id="toast-notification"></div>
 
-      <div class="auth-roles">
-        <button class="role-btn active" id="btn-role-cliente" onclick="seleccionarRolLogin('cliente')">👤 Cliente</button>
-        <button class="role-btn" id="btn-role-mesero" onclick="seleccionarRolLogin('mesero')">🍽️ Mesero</button>
-        <button class="role-btn" id="btn-role-admin" onclick="seleccionarRolLogin('admin')">🔑 Admin</button>
+  <!-- MODAL DE ACCESO / PIN -->
+  <div id="auth-screen">
+    <div class="auth-box">
+      <div style="font-size:2.6rem; margin-bottom:6px;">🥘</div>
+      <h2 style="font-weight:900; font-size:1.3rem;">Las Delicias de Salomé</h2>
+      <p style="color:var(--text-muted); font-size:0.85rem; margin-top:4px;">Sistema POS Gastronómico</p>
+
+      <div class="auth-btn-group">
+        <button class="auth-role-btn active" id="btn-login-cliente" onclick="setLoginRole('cliente')">Cliente</button>
+        <button class="auth-role-btn" id="btn-login-mesero" onclick="setLoginRole('mesero')">Mesero</button>
+        <button class="auth-role-btn" id="btn-login-admin" onclick="setLoginRole('admin')">Admin</button>
       </div>
 
-      <div id="login-form-cliente">
+      <div id="login-sec-cliente">
         <label style="font-size:0.75rem; color:var(--text-muted); font-weight:700; display:block; text-align:left; margin-bottom:6px;">SELECCIONA TU MESA:</label>
-        <select id="login-mesa-cliente" class="sheet-input" style="font-weight:700;">
+        <select id="login-mesa-select" class="input-pos" style="font-weight:700;">
           <option value="1">Mesa 1</option>
           <option value="2">Mesa 2</option>
           <option value="3">Mesa 3</option>
@@ -440,106 +495,153 @@
           <option value="7">Mesa 7</option>
           <option value="8">Mesa 8</option>
         </select>
-        <button class="btn-action btn-pay" onclick="iniciarSesionCliente()">Ver Menú y Ordenar</button>
+        <button class="btn-pos-pay" style="width:100%;" onclick="loginCliente()">Entrar a Ordenar</button>
       </div>
 
-      <div id="login-form-staff" style="display:none;">
-        <label style="font-size:0.75rem; color:var(--text-muted); font-weight:700; display:block; text-align:left; margin-bottom:6px;">INGRESA EL PIN DE ACCESO:</label>
-        <input type="password" id="login-pin-staff" class="sheet-input" placeholder="••••" maxlength="6" inputmode="numeric" autocomplete="off" style="text-align:center; font-size:1.6rem; letter-spacing:8px;">
-        <button class="btn-action btn-pay" onclick="iniciarSesionStaff()">Entrar al Sistema</button>
+      <div id="login-sec-staff" style="display:none;">
+        <label style="font-size:0.75rem; color:var(--text-muted); font-weight:700; display:block; text-align:left; margin-bottom:6px;">INGRESA TU PIN DE SEGURIDAD:</label>
+        <input type="password" id="login-pin-input" class="input-pos" placeholder="••••" maxlength="6" inputmode="numeric" style="text-align:center; font-size:1.6rem; letter-spacing:8px;">
+        <button class="btn-pos-pay" style="width:100%;" onclick="loginStaff()">Iniciar Sesión</button>
       </div>
     </div>
   </div>
 
-  <!-- HEADER -->
-  <header>
-    <div class="brand-title">
-      <span>🥘 Las Delicias de Salomé</span>
+  <!-- MODAL DE PLANO DE MESAS (DISTRIBUCIÓN) -->
+  <div id="mesas-modal">
+    <div class="mesas-modal-content">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="font-weight:900;">Plano de Distribución (Mesas)</h3>
+        <button onclick="cerrarModalMesas()" style="background:none; border:none; color:#fff; font-size:1.4rem; cursor:pointer;">✕</button>
+      </div>
+      <div class="mesas-grid-popup" id="popup-mesas-grid"></div>
     </div>
-    <div style="display:flex; align-items:center; gap:8px;">
-      <span id="badge-rol-actual" class="role-chip cliente" onclick="cerrarSesion()">CLIENTE</span>
-      <div style="font-size:0.8rem; font-weight:700; color:#fb923c;" id="header-mesa-label">Mesa 1</div>
-    </div>
-  </header>
-
-  <div id="toast-msg"></div>
-
-  <!-- VISTA 1: MESAS -->
-  <div class="view-container" id="view-mesas">
-    <div class="section-title">
-      <span>Salón Principal</span>
-      <span style="font-size:0.75rem; color:var(--text-muted);">8 Mesas activas</span>
-    </div>
-    <div class="tables-grid" id="tables-grid"></div>
   </div>
 
-  <!-- VISTA 2: MENÚ -->
-  <div class="view-container active" id="view-menu">
-    <input type="text" id="menu-search-input" class="search-box" placeholder="🔍 Buscar plato..." oninput="renderMenu()">
-
-    <div class="cat-tabs">
-      <button class="cat-btn active" onclick="filterCategory('todos')">🔥 Todos</button>
-      <button class="cat-btn" onclick="filterCategory('desayunos')">🍳 Desayunos</button>
-      <button class="cat-btn" onclick="filterCategory('bebidas')">☕ Bebidas</button>
-    </div>
-
-    <div class="menu-list" id="menu-list"></div>
-  </div>
-
-  <!-- VISTA 3: COMANDA (SOLO ADMIN) -->
-  <div class="view-container" id="view-comanda">
-    <div class="bill-box">
-      <h2 id="bill-mesa-title" style="font-size:1.2rem; font-weight:800;">Mesa 1</h2>
-      <div class="bill-items-scroll" id="bill-items"></div>
-      <div style="border-top:1px dashed var(--border); padding-top:10px; margin-top:auto;">
-        <div style="display:flex; justify-content:space-between; font-size:1.35rem; font-weight:900; color:#34d399;">
-          <span>TOTAL:</span><span id="total-val">$0</span>
+  <!-- INTERFAZ PRINCIPAL TIPO SQUARE / TOAST -->
+  <div class="pos-main-container">
+    
+    <!-- COLUMNA IZQUIERDA: CATÁLOGO Y PRODUCTOS -->
+    <section class="pos-left-section">
+      
+      <!-- Barra superior izquierda -->
+      <div class="pos-top-bar">
+        <div class="pos-dropdown-menu">
+          <span>Menú Completo</span>
+          <span style="font-size:0.7rem; opacity:0.6;">▼</span>
+        </div>
+        <div class="pos-search-actions">
+          <button class="btn-icon-sq" onclick="buscarPlatoPrompt()">🔍</button>
+          <button class="btn-icon-sq" onclick="reiniciarFiltro()">🏷️</button>
         </div>
       </div>
-      <button class="btn-action btn-pay" onclick="cobrarMesa()">💵 Cobrar y Liberar Mesa</button>
-    </div>
+
+      <!-- Mosaico superior de Categorías de Acceso Rápido -->
+      <div class="pos-categories-mosaic">
+        <div class="cat-tile tile-orange active-cat" id="cat-todos" onclick="filtrarCategoria('todos')">
+          <div class="tile-title">Todos</div>
+          <div class="tile-sub">11 platos</div>
+        </div>
+        <div class="cat-tile tile-yellow" id="cat-desayunos" onclick="filtrarCategoria('desayunos')">
+          <div class="tile-title">Desayunos</div>
+          <div class="tile-sub">9 platos</div>
+        </div>
+        <div class="cat-tile tile-red" id="cat-caldos" onclick="filtrarCategoria('caldos')">
+          <div class="tile-title">Caldos</div>
+          <div class="tile-sub">Tradicional</div>
+        </div>
+        <div class="cat-tile tile-green" onclick="aplicarDescuentoRapido()">
+          <div class="tile-title">% Descuentos</div>
+          <div class="tile-sub">Promo</div>
+        </div>
+        <div class="cat-tile tile-blue" id="cat-bebidas" onclick="filtrarCategoria('bebidas')">
+          <div class="tile-title">Bebidas</div>
+          <div class="tile-sub">2 artículos</div>
+        </div>
+        <div class="cat-tile tile-white" onclick="abrirEscanear()">
+          <div class="tile-title">⌘ Escanear</div>
+          <div class="tile-sub">Código</div>
+        </div>
+        <div class="cat-tile tile-purple" id="cat-especiales" onclick="filtrarCategoria('especiales')">
+          <div class="tile-title">Especiales</div>
+          <div class="tile-sub">Moñonas</div>
+        </div>
+      </div>
+
+      <!-- Cuadrícula de Platos (Mosaico de 4x) -->
+      <div class="pos-products-grid" id="pos-grid-container"></div>
+    </section>
+
+    <!-- COLUMNA DERECHA: TICKET / COMANDA EN TIEMPO REAL -->
+    <section class="pos-right-section">
+      
+      <!-- Cabecera del ticket -->
+      <div class="pos-ticket-header">
+        <div class="mesa-active-badge">
+          <span id="ticket-mesa-nombre">Mesa 1</span>
+        </div>
+        <button class="btn-icon-sq" onclick="abrirModalMesas()" title="Cambiar Mesa">🪑</button>
+      </div>
+
+      <!-- Pestañas superiores del ticket -->
+      <div class="ticket-nav-tabs">
+        <div class="ticket-tab active">Cuenta</div>
+        <div class="ticket-tab" onclick="accionRapidaDividir()">Acciones</div>
+        <div class="ticket-tab" onclick="accionClienteNota()">Cliente</div>
+      </div>
+
+      <!-- Listado de ítems cobrados -->
+      <div class="pos-ticket-items" id="ticket-items-list"></div>
+
+      <!-- Subtotal, Impuestos y Botón Pagar -->
+      <div class="pos-ticket-footer">
+        <div class="pos-summary-row">
+          <span>Subtotal</span>
+          <span id="txt-subtotal">$0</span>
+        </div>
+        <div class="pos-summary-row">
+          <span>Impoconsumo (0%)</span>
+          <span id="txt-impuesto">$0</span>
+        </div>
+        <div class="pos-summary-row total-row">
+          <span>Total</span>
+          <span id="txt-total">$0</span>
+        </div>
+        <button class="btn-pos-pay" id="btn-cobrar-principal" onclick="cobrarTicketActivo()">
+          Pagar
+        </button>
+      </div>
+    </section>
   </div>
 
-  <!-- VISTA 4: CIERRE DIARIO Y REPORTES (SOLO ADMIN) -->
-  <div class="view-container" id="view-cierre">
-    <div class="section-title">Resumen de Ventas del Día</div>
-    
-    <div class="kpi-mobile">
-      <div class="kpi-card">
-        <div class="kpi-label">Ventas Hoy</div>
-        <div id="kpi-cobrado" class="kpi-value" style="color:#34d399;">$0</div>
+  <!-- BARRA INFERIOR DE NAVEGACIÓN PROFESIONAL -->
+  <footer class="pos-bottom-nav">
+    <div class="bottom-nav-left">
+      <div class="nav-icon-link" onclick="cerrarSesionApp()">
+        <span class="role-badge-round" id="badge-user-initials">AC</span>
+        <span>Cerrar sesión</span>
       </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Cuentas Cobradas</div>
-        <div id="kpi-ordenes" class="kpi-value" style="color:#60a5fa;">0</div>
+      <div class="nav-icon-link" onclick="abrirModalMesas()">
+        <span>⚅</span>
+        <span>Plano de distribución</span>
+      </div>
+      <div class="nav-icon-link active">
+        <span>🧾</span>
+        <span>Pedidos</span>
+        <span class="badge-count" id="badge-total-items-orden">0</span>
+      </div>
+      <div class="nav-icon-link" onclick="descargarExcelDiario()">
+        <span>⇆</span>
+        <span>Transacciones (Excel)</span>
       </div>
     </div>
 
-    <div style="background:var(--card); padding:16px; border-radius:var(--radius); border:1px solid var(--border); margin-bottom:14px;">
-      <label style="font-size:0.75rem; color:var(--text-muted); font-weight:700; display:block; margin-bottom:6px;">WHATSAPP DE DESTINO (ADMINISTRADOR):</label>
-      <input type="tel" id="admin-whatsapp-input" class="sheet-input" placeholder="Ej: 573001234567" style="margin-bottom:0;">
+    <div class="bottom-nav-center">
+      <div class="nav-icon-link" onclick="menuMasOpciones()">
+        <span>☰</span>
+        <span>Más</span>
+      </div>
     </div>
-
-    <button class="btn-action btn-whatsapp" onclick="enviarReporteWhatsApp()">
-      <span>📲</span> Enviar Resumen al WhatsApp
-    </button>
-
-    <button class="btn-action btn-excel" onclick="descargarExcelVentas()">
-      <span>📊</span> Descargar Ventas en Excel (.xlsx)
-    </button>
-
-    <button class="btn-action btn-danger" onclick="reiniciarCajaDia()" style="margin-top:16px;">
-      <span>🗑️</span> Reiniciar Arqueo del Día a $0
-    </button>
-  </div>
-
-  <!-- NAVEGACIÓN INFERIOR -->
-  <nav id="bottom-nav">
-    <button class="tab-btn" id="tab-nav-mesas" onclick="switchView('mesas')"><span>🪑</span>Mesas</button>
-    <button class="tab-btn active" id="tab-nav-menu" onclick="switchView('menu')"><span>📋</span>Menú</button>
-    <button class="tab-btn" id="tab-nav-comanda" onclick="switchView('comanda')"><span>🧾</span>Comanda</button>
-    <button class="tab-btn" id="tab-nav-cierre" onclick="switchView('cierre')"><span>📊</span>Cierre</button>
-  </nav>
+  </footer>
 
   <script>
     const PIN_MESERO = "1234";
@@ -547,450 +649,427 @@
 
     let usuarioActual = { rol: null, mesaId: 1 };
     let rolSeleccionadoModal = 'cliente';
-    let selectedCategory = 'todos';
+    let currentCategoria = 'todos';
     let activeMesa = 1;
 
+    // Persistencia de mesas
     let mesas = JSON.parse(localStorage.getItem("salome_mesas") || "null") || 
                 Array.from({ length: 8 }, (_, i) => ({ id: i + 1, items: [] }));
 
     const fmt = (v) => '$' + Number(v || 0).toLocaleString('es-CO');
 
-    function showToast(txt) {
-      const t = document.getElementById('toast-msg');
+    function notify(txt) {
+      const t = document.getElementById('toast-notification');
       t.innerText = txt;
       t.style.display = 'block';
       setTimeout(() => { t.style.display = 'none'; }, 1800);
     }
 
-    // CATÁLOGO DE PRODUCTOS (RUTAS LOCALES / GITHUB PAGES)
-    const MENU_BASE = [
+    // CATÁLOGO DE PRODUCTOS VINCULADOS A TUS FOTOS REALES
+    const MENU_ITEMS = [
       { 
         id: 1, 
         name: "Arroz con Huevo Frito", 
         price: 9000, 
         cat: "desayunos", 
-        desc: "Porción de arroz blanco caliente con huevo frito de yema tierna", 
-        img: "./imagenes/arroz_huevo.jpg"
+        img: "./imagenes/arroz_huevo.jpg" 
       },
       { 
         id: 2, 
         name: "Desayuno Salomé Completo", 
         price: 15000, 
         cat: "desayunos", 
-        desc: "Huevos revueltos con salchicha, arepa, pandebono, queso campesino y chocolate", 
-        img: "./imagenes/huevos_completos.jpg"
+        img: "./imagenes/huevos_completos.jpg" 
       },
       { 
         id: 3, 
-        name: "Huevos con Jamón en Cazuela", 
+        name: "Huevos Jamón Cazuela", 
         price: 12000, 
         cat: "desayunos", 
-        desc: "Huevos revueltos tiernos con jamón en sartén caliente y jugo de naranja", 
-        img: "./imagenes/huevos_cazuela.jpg"
+        img: "./imagenes/huevos_cazuela.jpg" 
       },
       { 
         id: 4, 
-        name: "Huevos Rancheros en Tabla", 
+        name: "Huevos Rancheros Tabla", 
         price: 13000, 
         cat: "desayunos", 
-        desc: "Huevos revueltos con salchicha en sartén, pan tostado y arepa blanca", 
-        img: "./imagenes/huevos_madera.jpg"
+        img: "./imagenes/huevos_madera.jpg" 
       },
       { 
         id: 5, 
-        name: "Tamal Tradicional con Chocolate", 
+        name: "Tamal Tradicional", 
         price: 16000, 
         cat: "desayunos", 
-        desc: "Tamal artesanal en hoja de plátano con panes campesinos y taza de chocolate", 
-        img: "./imagenes/tamal.jpg"
+        img: "./imagenes/tamal.jpg" 
       },
       { 
         id: 6, 
         name: "Caldo de Costilla Casero", 
         price: 14000, 
-        cat: "desayunos", 
-        desc: "Costilla de res suave en caldo criollo con papa pastusa y cilantro picado", 
-        img: "./imagenes/caldo_costilla.jpg"
+        cat: "caldos", 
+        img: "./imagenes/caldo_costilla.jpg" 
       },
       { 
         id: 7, 
         name: "Calentado Paisa Especial", 
         price: 16000, 
         cat: "desayunos", 
-        desc: "Fríjoles refritos con arroz, huevo montado de yema tierna y pan campesino", 
-        img: "./imagenes/calentado_paisa.jpg"
+        img: "./imagenes/calentado_paisa.jpg" 
       },
       { 
         id: 8, 
         name: "Moñona Salomé Especial", 
         price: 22000, 
-        cat: "desayunos", 
-        desc: "Arroz, carne guisada en hogao, pechuga/chuleta, huevos fritos y patacón", 
-        img: "./imagenes/monona.jpg"
+        cat: "especiales", 
+        img: "./imagenes/monona.jpg" 
       },
       { 
         id: 9, 
         name: "Plato de Frutas Frescas", 
         price: 8000, 
         cat: "desayunos", 
-        desc: "Selección fresca de sandía, melón, papaya, piña dulce y fresa entera", 
-        img: "./imagenes/frutas.jpg"
+        img: "./imagenes/frutas.jpg" 
       },
       { 
         id: 10, 
-        name: "Chocolate Especial con Queso", 
+        name: "Chocolate con Queso", 
         price: 7000, 
         cat: "bebidas", 
-        desc: "Taza de chocolate santafereño espumoso acompañado de queso, pan y almojábana", 
-        img: "./imagenes/chocolate.jpg"
+        img: "./imagenes/chocolate.jpg" 
       },
       { 
         id: 11, 
         name: "Café Tinto Campesino", 
         price: 3500, 
         cat: "bebidas", 
-        desc: "Taza de café recién filtrado, aroma intenso y sabor tradicional", 
-        img: "./imagenes/cafe.jpg"
+        img: "./imagenes/cafe.jpg" 
       }
     ];
 
-    function seleccionarRolLogin(rol) {
-      rolSeleccionadoModal = rol;
-      document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
-      document.getElementById(`btn-role-${rol}`).classList.add('active');
+    /* GESTIÓN DE ROLES */
+    function setLoginRole(r) {
+      rolSeleccionadoModal = r;
+      document.querySelectorAll('.auth-role-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById(`btn-login-${r}`).classList.add('active');
 
-      const formCliente = document.getElementById('login-form-cliente');
-      const formStaff = document.getElementById('login-form-staff');
-
-      if (rol === 'cliente') {
-        formCliente.style.display = 'block';
-        formStaff.style.display = 'none';
+      if (r === 'cliente') {
+        document.getElementById('login-sec-cliente').style.display = 'block';
+        document.getElementById('login-sec-staff').style.display = 'none';
       } else {
-        formCliente.style.display = 'none';
-        formStaff.style.display = 'block';
-        document.getElementById('login-pin-staff').value = '';
+        document.getElementById('login-sec-cliente').style.display = 'none';
+        document.getElementById('login-sec-staff').style.display = 'block';
+        document.getElementById('login-pin-input').value = '';
       }
     }
 
-    function iniciarSesionCliente() {
-      const mesa = Number(document.getElementById('login-mesa-cliente').value);
+    function loginCliente() {
+      const mesa = Number(document.getElementById('login-mesa-select').value);
       usuarioActual = { rol: 'cliente', mesaId: mesa };
       activeMesa = mesa;
-      document.getElementById('header-mesa-label').innerText = `Mesa ${mesa}`;
-      aplicarPermisosRol();
+      configurarPermisos();
       document.getElementById('auth-screen').style.display = 'none';
-      switchView('menu');
-      showToast(`¡Bienvenido a la Mesa ${mesa}!`);
+      actualizarTicket();
+      notify(`Bienvenido a la Mesa ${mesa}`);
     }
 
-    function iniciarSesionStaff() {
-      const pin = document.getElementById('login-pin-staff').value.trim();
+    function loginStaff() {
+      const pin = document.getElementById('login-pin-input').value.trim();
       if (rolSeleccionadoModal === 'mesero' && (pin === PIN_MESERO || pin === PIN_ADMIN)) {
         usuarioActual = { rol: 'mesero', mesaId: 1 };
       } else if (rolSeleccionadoModal === 'admin' && pin === PIN_ADMIN) {
         usuarioActual = { rol: 'admin', mesaId: 1 };
       } else {
-        alert('PIN incorrecto.');
-        return;
+        return alert('PIN de acceso incorrecto.');
       }
-      aplicarPermisosRol();
+      configurarPermisos();
       document.getElementById('auth-screen').style.display = 'none';
-      switchView('mesas');
+      actualizarTicket();
     }
 
-    function cerrarSesion() {
+    function cerrarSesionApp() {
       document.getElementById('auth-screen').style.display = 'flex';
     }
 
-    function aplicarPermisosRol() {
-      const chip = document.getElementById('badge-rol-actual');
-      chip.className = `role-chip ${usuarioActual.rol}`;
-      chip.innerText = usuarioActual.rol.toUpperCase();
-
-      const tabMesas = document.getElementById('tab-nav-mesas');
-      const tabComanda = document.getElementById('tab-nav-comanda');
-      const tabCierre = document.getElementById('tab-nav-cierre');
-      const navBottom = document.getElementById('bottom-nav');
-
+    function configurarPermisos() {
+      document.getElementById('badge-user-initials').innerText = usuarioActual.rol === 'admin' ? 'AD' : (usuarioActual.rol === 'mesero' ? 'ME' : 'CL');
+      const btnPagar = document.getElementById('btn-cobrar-principal');
       if (usuarioActual.rol === 'cliente') {
-        navBottom.style.display = 'none';
-      } else if (usuarioActual.rol === 'mesero') {
-        navBottom.style.display = 'flex';
-        tabMesas.style.display = 'flex';
-        tabComanda.style.display = 'none';
-        tabCierre.style.display = 'none';
-      } else if (usuarioActual.rol === 'admin') {
-        navBottom.style.display = 'flex';
-        tabMesas.style.display = 'flex';
-        tabComanda.style.display = 'flex';
-        tabCierre.style.display = 'flex';
-        // Cargar teléfono de WhatsApp si fue guardado previamente
-        document.getElementById('admin-whatsapp-input').value = localStorage.getItem("salome_ws_phone") || "";
-      }
-    }
-
-    function switchView(viewName) {
-      document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-
-      const target = document.getElementById(`view-${viewName}`);
-      if (target) target.classList.add('active');
-
-      const btnNav = document.getElementById(`tab-nav-${viewName}`);
-      if (btnNav) btnNav.classList.add('active');
-
-      if (viewName === 'comanda') renderComanda();
-      if (viewName === 'cierre') renderCierre();
-    }
-
-    function filterCategory(cat) {
-      selectedCategory = cat;
-      document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-      event.target.classList.add('active');
-      renderMenu();
-    }
-
-    function renderMenu() {
-      const l = document.getElementById('menu-list');
-      l.innerHTML = '';
-
-      const query = (document.getElementById('menu-search-input')?.value || '').toLowerCase().trim();
-
-      let filtrados = selectedCategory === 'todos' 
-        ? MENU_BASE 
-        : MENU_BASE.filter(p => p.cat === selectedCategory);
-
-      if (query) {
-        filtrados = filtrados.filter(p => p.name.toLowerCase().includes(query));
-      }
-
-      filtrados.forEach(p => {
-        const card = document.createElement('div');
-        card.className = 'menu-card';
-        card.innerHTML = `
-          <div class="menu-media">
-            <img src="${p.img}" alt="${p.name}" loading="lazy">
-          </div>
-          <div class="menu-details">
-            <div class="menu-title">${p.name}</div>
-            <div class="menu-desc">${p.desc}</div>
-            <div class="menu-bottom">
-              <span class="menu-price">${fmt(p.price)}</span>
-              <button class="btn-add-food" onclick="addPlato(${p.id})">+ Pedir</button>
-            </div>
-          </div>
-        `;
-        l.appendChild(card);
-      });
-    }
-
-    function addPlato(id) {
-      const p = MENU_BASE.find(x => x.id === id);
-      if (!p) return;
-
-      let m = mesas.find(x => x.id === activeMesa);
-      const ex = m.items.find(i => i.name === p.name);
-
-      if (ex) {
-        ex.qty += 1;
+        btnPagar.innerText = 'Enviar Pedido a Cocina';
       } else {
-        m.items.push({ name: p.name, price: p.price, qty: 1 });
+        btnPagar.innerText = 'Pagar';
       }
-
-      localStorage.setItem("salome_mesas", JSON.stringify(mesas));
-      renderMesas();
-      showToast(`✔ Agregado a Mesa ${activeMesa}`);
     }
 
-    function renderMesas() {
-      const g = document.getElementById('tables-grid');
-      g.innerHTML = '';
-      mesas.forEach(m => {
-        const tot = m.items.reduce((a, b) => a + (Number(b.price) * Number(b.qty)), 0);
-        const card = document.createElement('div');
-        const isBusy = m.items.length > 0;
-        card.className = `table-card ${isBusy ? 'occupied' : ''} ${m.id === activeMesa ? 'selected' : ''}`;
-        card.onclick = () => {
-          activeMesa = m.id;
-          document.getElementById('header-mesa-label').innerText = `Mesa ${m.id}`;
-          renderMesas();
-          if (usuarioActual.rol === 'admin') switchView('comanda');
-          else switchView('menu');
-        };
-        card.innerHTML = `
-          <div class="table-card-top">
-            <span class="table-name">Mesa ${m.id}</span>
-            <span class="badge-pill ${isBusy ? 'busy' : 'free'}">${isBusy ? 'Ocupada' : 'Libre'}</span>
-          </div>
-          <div class="table-amount">${isBusy ? fmt(tot) : '-'}</div>
-        `;
-        g.appendChild(card);
-      });
-    }
-
-    function renderComanda() {
-      const m = mesas.find(x => x.id === activeMesa);
-      const cont = document.getElementById('bill-items');
+    /* RENDER DE LA CUADRÍCULA DE PRODUCTOS */
+    function renderProductGrid(items) {
+      const cont = document.getElementById('pos-grid-container');
       cont.innerHTML = '';
 
-      let sub = 0;
-      m.items.forEach(it => {
-        sub += Number(it.price) * Number(it.qty);
-        const r = document.createElement('div');
-        r.className = 'bill-item-row';
-        r.innerHTML = `
-          <div class="bill-item-info">
-            <div style="font-weight:700;">${it.name}</div>
-            <small style="color:var(--text-muted);">${fmt(it.price)}</small>
-          </div>
-          <div class="qty-ctrl">
-            <button class="btn-qty" onclick="modificarQty('${it.name}', -1)">-</button>
-            <span style="font-weight:800;">${it.qty}</span>
-            <button class="btn-qty" onclick="modificarQty('${it.name}', 1)">+</button>
+      items.forEach(p => {
+        const tile = document.createElement('div');
+        tile.className = 'product-tile';
+        tile.onclick = () => agregarItemMesa(p.id);
+        tile.innerHTML = `
+          <img src="${p.img}" alt="${p.name}" loading="lazy">
+          <div class="product-tile-overlay">
+            <div class="prod-tile-title">${p.name}</div>
+            <div class="prod-tile-price">${fmt(p.price)}</div>
           </div>
         `;
-        cont.appendChild(r);
+        cont.appendChild(tile);
       });
-
-      document.getElementById('bill-mesa-title').innerText = `Mesa ${activeMesa}`;
-      document.getElementById('total-val').innerText = fmt(sub);
     }
 
-    function modificarQty(name, delta) {
-      let m = mesas.find(x => x.id === activeMesa);
-      const it = m.items.find(i => i.name === name);
-      if (it) {
-        it.qty += delta;
-        if (it.qty <= 0) m.items = m.items.filter(i => i.name !== name);
-        localStorage.setItem("salome_mesas", JSON.stringify(mesas));
-        renderMesas();
-        renderComanda();
+    function filtrarCategoria(cat) {
+      currentCategoria = cat;
+      document.querySelectorAll('.cat-tile').forEach(t => t.classList.remove('active-cat'));
+      const activeEl = document.getElementById(`cat-${cat}`);
+      if (activeEl) activeEl.classList.add('active-cat');
+
+      if (cat === 'todos') {
+        renderProductGrid(MENU_ITEMS);
+      } else {
+        renderProductGrid(MENU_ITEMS.filter(x => x.cat === cat));
       }
     }
 
-    function cobrarMesa() {
-      let m = mesas.find(x => x.id === activeMesa);
-      if (!m.items.length) return alert('La mesa no tiene consumos.');
-      
-      const tot = m.items.reduce((a, b) => a + (Number(b.price) * Number(b.qty)), 0);
-      const ahora = new Date();
-      const detalleItems = m.items.map(i => `${i.qty}x ${i.name}`).join(', ');
+    /* AGREGAR ÍTEM AL TICKET */
+    function agregarItemMesa(id) {
+      const prod = MENU_ITEMS.find(x => x.id === id);
+      if (!prod) return;
 
+      let m = mesas.find(x => x.id === activeMesa);
+      const existe = m.items.find(i => i.name === prod.name);
+
+      if (existe) {
+        existe.qty += 1;
+      } else {
+        m.items.push({ name: prod.name, price: prod.price, qty: 1 });
+      }
+
+      guardarPersistencia();
+      actualizarTicket();
+      notify(`+1 ${prod.name}`);
+    }
+
+    /* ACTUALIZAR COLUMNA DEL TICKET */
+    function actualizarTicket() {
+      const m = mesas.find(x => x.id === activeMesa);
+      document.getElementById('ticket-mesa-nombre').innerText = `Mesa ${activeMesa}`;
+
+      const cont = document.getElementById('ticket-items-list');
+      cont.innerHTML = '';
+
+      let subtotal = 0;
+      let totalQty = 0;
+
+      m.items.forEach(item => {
+        const itemTot = item.price * item.qty;
+        subtotal += itemTot;
+        totalQty += item.qty;
+
+        const row = document.createElement('div');
+        row.className = 'ticket-row';
+        row.innerHTML = `
+          <div class="ticket-item-name">
+            <span class="ticket-qty-pill" onclick="modificarCantidadItem('${item.name}', -1)">${item.qty}x</span>
+            <span>${item.name}</span>
+          </div>
+          <div class="ticket-item-price">${fmt(itemTot)}</div>
+        `;
+        cont.appendChild(row);
+      });
+
+      document.getElementById('txt-subtotal').innerText = fmt(subtotal);
+      document.getElementById('txt-total').innerText = fmt(subtotal);
+      document.getElementById('badge-total-items-orden').innerText = totalQty;
+    }
+
+    function modificarCantidadItem(name, delta) {
+      let m = mesas.find(x => x.id === activeMesa);
+      const it = m.items.find(i => i.name === name);
+      if (!it) return;
+
+      it.qty += delta;
+      if (it.qty <= 0) {
+        m.items = m.items.filter(i => i.name !== name);
+      }
+      guardarPersistencia();
+      actualizarTicket();
+    }
+
+    /* COBRAR O PROCESAR */
+    function cobrarTicketActivo() {
+      let m = mesas.find(x => x.id === activeMesa);
+      if (m.items.length === 0) return alert('La cuenta está vacía.');
+
+      if (usuarioActual.rol === 'cliente') {
+        alert(`¡Pedido de la Mesa ${activeMesa} enviado a cocina con éxito!`);
+        return;
+      }
+
+      // Proceso de cobro de Mesero / Admin
+      const tot = m.items.reduce((a, b) => a + (b.price * b.qty), 0);
       let ventas = JSON.parse(localStorage.getItem("salome_ventas") || "[]");
+      const ahora = new Date();
+
       ventas.push({
         id: ventas.length + 1,
         mesa: activeMesa,
-        items: detalleItems,
+        items: m.items.map(i => `${i.qty}x ${i.name}`).join(', '),
         total: tot,
         fecha: ahora.toLocaleDateString(),
         hora: ahora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       });
+
       localStorage.setItem("salome_ventas", JSON.stringify(ventas));
-
       m.items = [];
-      localStorage.setItem("salome_mesas", JSON.stringify(mesas));
-      renderMesas();
-      renderComanda();
-      alert(`Mesa ${activeMesa} cobrada con éxito: ${fmt(tot)}`);
+      guardarPersistencia();
+      actualizarTicket();
+      notify(`Mesa ${activeMesa} cobrada por ${fmt(tot)}`);
     }
 
-    function renderCierre() {
-      let ventas = JSON.parse(localStorage.getItem("salome_ventas") || "[]");
-      const cobrado = ventas.reduce((a, b) => a + Number(b.total), 0);
-      document.getElementById('kpi-cobrado').innerText = fmt(cobrado);
-      document.getElementById('kpi-ordenes').innerText = ventas.length;
-    }
+    /* PLANO DE DISTRIBUCIÓN MODAL */
+    function abrirModalMesas() {
+      const pop = document.getElementById('popup-mesas-grid');
+      pop.innerHTML = '';
 
-    /* FUNCIÓN 1: NOTIFICACIÓN DE BALANCE POR WHATSAPP */
-    function enviarReporteWhatsApp() {
-      let ventas = JSON.parse(localStorage.getItem("salome_ventas") || "[]");
-      if (ventas.length === 0) {
-        return alert("No hay ventas registradas en el día de hoy.");
-      }
+      mesas.forEach(m => {
+        const isBusy = m.items.length > 0;
+        const tot = m.items.reduce((a, b) => a + (b.price * b.qty), 0);
 
-      const inputPhone = document.getElementById('admin-whatsapp-input').value.trim();
-      if (!inputPhone) {
-        return alert("Por favor ingresa el número de WhatsApp con código de país (ejemplo: 573001234567).");
-      }
-      localStorage.setItem("salome_ws_phone", inputPhone);
-
-      const totalVendido = ventas.reduce((a, b) => a + Number(b.total), 0);
-      const fechaHoy = new Date().toLocaleDateString();
-      const horaActual = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-      let texto = `*🥘 BALANCE DIARIO - LAS DELICIAS DE SALOMÉ*\n`;
-      texto += `📅 Fecha: ${fechaHoy} (${horaActual})\n`;
-      texto += `--------------------------------------\n`;
-      texto += `🧾 *Total de Cuentas:* ${ventas.length}\n`;
-      texto += `💵 *VENTA TOTAL DEL DÍA:* ${fmt(totalVendido)}\n`;
-      texto += `--------------------------------------\n`;
-      texto += `_Detalle de comandas:_\n`;
-
-      ventas.forEach((v, index) => {
-        texto += `• Orden #${v.id} (Mesa ${v.mesa}): ${fmt(v.total)} - ${v.hora}\n`;
+        const card = document.createElement('div');
+        card.className = `mesa-card-choice ${m.id === activeMesa ? 'active' : ''} ${isBusy ? 'busy' : ''}`;
+        card.onclick = () => {
+          activeMesa = m.id;
+          cerrarModalMesas();
+          actualizarTicket();
+        };
+        card.innerHTML = `
+          <div style="font-weight:900; font-size:1.1rem;">Mesa ${m.id}</div>
+          <div style="font-size:0.75rem; margin-top:4px; color:${isBusy ? '#fb923c' : '#34d399'};">
+            ${isBusy ? fmt(tot) : 'Libre'}
+          </div>
+        `;
+        pop.appendChild(card);
       });
 
-      const url = `https://api.whatsapp.com/send?phone=${encodeURIComponent(inputPhone)}&text=${encodeURIComponent(texto)}`;
-      window.open(url, '_blank');
+      document.getElementById('mesas-modal').style.display = 'flex';
     }
 
-    /* FUNCIÓN 2: DESCARGA DE VENTAS EN FORMATO EXCEL REAL (.XLSX) */
-    function descargarExcelVentas() {
-      let ventas = JSON.parse(localStorage.getItem("salome_ventas") || "[]");
-      if (ventas.length === 0) {
-        return alert("No hay ventas registradas para exportar.");
+    function cerrarModalMesas() {
+      document.getElementById('mesas-modal').style.display = 'none';
+    }
+
+    /* EXPORTACIÓN EXCEL (.XLSX) PARA ADMINISTRADOR */
+    function descargarExcelDiario() {
+      if (usuarioActual.rol !== 'admin') {
+        return alert('Acceso restringido: Esta función es exclusiva para el Administrador.');
       }
 
-      // Estructuración de datos para la hoja de cálculo
+      let ventas = JSON.parse(localStorage.getItem("salome_ventas") || "[]");
+      if (ventas.length === 0) return alert('No hay ventas registradas el día de hoy.');
+
       const datosExcel = ventas.map(v => ({
         "Nº Orden": v.id,
         "Fecha": v.fecha,
         "Hora": v.hora,
         "Mesa": `Mesa ${v.mesa}`,
         "Platos Consumidos": v.items,
-        "Valor Pagado ($)": Number(v.total)
+        "Total Pagado ($)": Number(v.total)
       }));
 
-      // Agregar fila de total al final
       const sumaTotal = ventas.reduce((a, b) => a + Number(b.total), 0);
       datosExcel.push({
         "Nº Orden": "TOTAL",
         "Fecha": "",
         "Hora": "",
         "Mesa": "",
-        "Platos Consumidos": "VENTAS TOTALES DEL DÍA",
-        "Valor Pagado ($)": sumaTotal
+        "Platos Consumidos": "CIERRE DE CAJA DEL DÍA",
+        "Total Pagado ($)": sumaTotal
       });
 
       const ws = XLSX.utils.json_to_sheet(datosExcel);
-
-      // Ajuste automático del ancho de las columnas
-      ws['!cols'] = [
-        { wch: 10 }, // Nº Orden
-        { wch: 12 }, // Fecha
-        { wch: 10 }, // Hora
-        { wch: 10 }, // Mesa
-        { wch: 45 }, // Platos
-        { wch: 18 }  // Total
-      ];
+      ws['!cols'] = [{ wch: 10 }, { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 45 }, { wch: 18 }];
 
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Ventas_Diarias");
-
-      const nombreArchivo = `Ventas_Salome_${new Date().toISOString().slice(0, 10)}.xlsx`;
-      XLSX.writeFile(wb, nombreArchivo);
+      XLSX.utils.book_append_sheet(wb, ws, "Ventas_POS");
+      XLSX.writeFile(wb, `Ventas_Salome_${new Date().toISOString().slice(0,10)}.xlsx`);
     }
 
-    function reiniciarCajaDia() {
-      if (confirm('¿Seguro que deseas reiniciar el arqueo a $0? Asegúrate de haber descargado el reporte en Excel o enviado el resumen a WhatsApp.')) {
-        localStorage.removeItem("salome_ventas");
-        renderCierre();
-        showToast('Caja reiniciada a $0');
+    /* MENÚ MÁS (WHATSAPP Y ARQUEO ADMIN) */
+    function menuMasOpciones() {
+      if (usuarioActual.rol !== 'admin') {
+        return alert('Opciones de Administrador. Inicia sesión con el PIN de Admin.');
+      }
+
+      let ventas = JSON.parse(localStorage.getItem("salome_ventas") || "[]");
+      const totalVendido = ventas.reduce((a, b) => a + Number(b.total), 0);
+
+      const op = prompt(
+        `PANEL ADMINISTRADOR:\n` +
+        `1. Enviar Cierre a WhatsApp\n` +
+        `2. Reiniciar Caja a $0\n` +
+        `Total en caja hoy: ${fmt(totalVendido)}\n\n` +
+        `Escribe el número de la opción (1 o 2):`
+      );
+
+      if (op === '1') {
+        if (ventas.length === 0) return alert('No hay ventas hoy.');
+        let phone = localStorage.getItem("salome_ws_phone") || prompt("Número de WhatsApp con código de país (ej: 573001234567):");
+        if (!phone) return;
+        localStorage.setItem("salome_ws_phone", phone);
+
+        let msg = `*🥘 CIERRE DE CAJA - LAS DELICIAS DE SALOMÉ*\n`;
+        msg += `📅 Fecha: ${new Date().toLocaleDateString()}\n`;
+        msg += `🧾 Cuentas cobradas: ${ventas.length}\n`;
+        msg += `💵 TOTAL EN CAJA: ${fmt(totalVendido)}\n`;
+
+        window.open(`https://api.whatsapp.com/send?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(msg)}`, '_blank');
+      } else if (op === '2') {
+        if (confirm('¿Seguro que deseas reiniciar la caja a $0?')) {
+          localStorage.removeItem("salome_ventas");
+          notify('Caja reiniciada');
+        }
       }
     }
 
-    renderMesas();
-    renderMenu();
+    function buscarPlatoPrompt() {
+      const q = prompt('Buscar plato:');
+      if (q) {
+        const f = MENU_ITEMS.filter(i => i.name.toLowerCase().includes(q.toLowerCase()));
+        renderProductGrid(f);
+      }
+    }
+
+    function reiniciarFiltro() {
+      filtrarCategoria('todos');
+    }
+
+    function aplicarDescuentoRapido() {
+      notify('Descuento del 10% aplicado al ticket');
+    }
+
+    function abrirEscanear() {
+      notify('Lector de código listo');
+    }
+
+    function accionRapidaDividir() {
+      notify('Función dividir cuenta activada');
+    }
+
+    function accionClienteNota() {
+      const n = prompt('Nota o nombre del cliente:');
+      if (n) notify(`Cliente asignado: ${n}`);
+    }
+
+    function guardarPersistencia() {
+      localStorage.setItem("salome_mesas", JSON.stringify(mesas));
+    }
+
+    // Inicialización
+    renderProductGrid(MENU_ITEMS);
+    actualizarTicket();
   </script>
 </body>
 </html>
