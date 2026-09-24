@@ -2,352 +2,1026 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Las Delicias de Salomé</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Las Delicias de Salomé - POS & Facturación</title>
+  
+  <!-- SheetJS para Excel y html2pdf para generación directa de PDF -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
   <style>
-    :root { --bg:#0f172a; --card:#1e293b; --b:#334155; --p:#ea580c; --g:#10b981; --t:#f8fafc; --m:#94a3b8; }
-    * { box-sizing:border-box; margin:0; padding:0; font-family:-apple-system,BlinkMacSystemFont,sans-serif; -webkit-tap-highlight-color:transparent; user-select:none; }
-    body { background:var(--bg); color:var(--t); height:100vh; display:flex; flex-direction:column; overflow:hidden; }
-    header, nav { background:rgba(15,23,42,0.95); border-color:var(--b); border-style:solid; z-index:90; }
-    header { padding:12px 16px; border-bottom-width:1px; display:flex; justify-content:space-between; align-items:center; }
-    nav { position:fixed; bottom:0; left:0; right:0; height:60px; border-top-width:1px; display:flex; }
-    .nav-b { flex:1; border:none; background:none; color:var(--m); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; font-size:0.75rem; font-weight:700; }
-    .nav-b.act { color:var(--p); }
-    .screen { flex:1; overflow-y:auto; padding:16px; padding-bottom:80px; display:none; }
-    .screen.act { display:block; }
-    .inp { width:100%; padding:12px; border-radius:12px; border:1px solid var(--b); background:var(--card); color:#fff; font-size:0.95rem; margin-bottom:12px; outline:none; }
-    .btn { width:100%; padding:13px; border-radius:12px; border:none; font-size:0.95rem; font-weight:800; color:#fff; cursor:pointer; margin-top:8px; display:flex; align-items:center; justify-content:center; gap:8px; }
-    .card { background:var(--card); border:1px solid var(--b); border-radius:14px; padding:12px; margin-bottom:10px; }
-    .food { display:flex; gap:12px; align-items:center; }
-    .food img { width:78px; height:78px; border-radius:10px; object-fit:cover; background:#000; }
-    .p-btn { background:var(--p); color:#fff; border:none; padding:6px 12px; border-radius:8px; font-weight:800; font-size:0.8rem; }
-    .grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-    .m-box { background:var(--card); border:1.5px solid var(--b); border-radius:12px; padding:14px; cursor:pointer; }
-    .m-box.sel { border-color:var(--p); }
-    .modal { position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:200; display:none; align-items:center; justify-content:center; padding:16px; }
-    .ticket { background:#fff; color:#111; width:100%; max-width:320px; border-radius:10px; padding:20px; font-family:"Courier New",monospace; font-size:0.85rem; }
-    #toast { position:fixed; top:20px; left:50%; transform:translateX(-50%); background:var(--g); color:#fff; font-weight:800; padding:8px 18px; border-radius:20px; z-index:300; display:none; }
-    @media print { body * { visibility:hidden; } #mod-fac, #mod-fac * { visibility:visible; } #mod-fac { position:absolute; inset:0; background:#fff; } .no-p { display:none!important; } }
+    :root {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --primary: #ea580c;
+      --primary-dark: #c2410c;
+      --accent: #10b981;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --card-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* PANTALLA INICIAL DE ACCESO */
+    #modal-login {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(6px);
+      z-index: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .auth-box {
+      background: var(--surface);
+      border-radius: 20px;
+      padding: 26px;
+      width: 100%;
+      max-width: 350px;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+    }
+    .role-tabs {
+      display: flex;
+      gap: 6px;
+      background: #f1f5f9;
+      padding: 4px;
+      border-radius: 12px;
+      margin: 16px 0;
+    }
+    .role-btn {
+      flex: 1;
+      padding: 9px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 0.8rem;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .role-btn.active {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    /* HEADER */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 50;
+    }
+    .brand-logo {
+      font-size: 1.1rem;
+      font-weight: 900;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .mesa-pill {
+      background: #fff7ed;
+      color: var(--primary);
+      border: 1px solid #fed7aa;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-weight: 800;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    /* VISTAS */
+    .screen-view {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      padding-bottom: 90px;
+      display: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .screen-view.active { display: block; }
+
+    .search-input {
+      width: 100%;
+      padding: 13px 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 0.95rem;
+      margin-bottom: 14px;
+      outline: none;
+    }
+    .cat-scroll {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      margin-bottom: 14px;
+    }
+    .cat-chip {
+      flex-shrink: 0;
+      padding: 8px 16px;
+      border-radius: 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .cat-chip.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    /* TARJETAS DE PLATOS */
+    .menu-cards-col { display: flex; flex-direction: column; gap: 12px; }
+    .card-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 12px;
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      box-shadow: var(--card-shadow);
+    }
+    .card-img-wrap {
+      width: 86px;
+      height: 86px;
+      border-radius: 12px;
+      overflow: hidden;
+      flex-shrink: 0;
+      background: #e2e8f0;
+      position: relative;
+    }
+    .card-img-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .card-content { flex: 1; min-width: 0; }
+    .card-name { font-size: 0.96rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .card-desc { font-size: 0.76rem; color: var(--muted); margin: 3px 0 6px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .card-footer { display: flex; justify-content: space-between; align-items: center; }
+    .card-price { font-size: 1.05rem; font-weight: 900; color: var(--accent); }
+
+    .btn-add-food {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-size: 0.82rem;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .btn-add-food:active { transform: scale(0.92); }
+
+    /* MESAS */
+    .tables-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .table-box {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      min-height: 110px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      cursor: pointer;
+      box-shadow: var(--card-shadow);
+    }
+    .table-box.active { border-color: var(--primary); background: #fffaf5; }
+    .table-box.busy { border-color: #f97316; }
+
+    /* BARRA FLOTANTE RESUMEN */
+    #floating-cart-pill {
+      position: fixed;
+      bottom: 74px;
+      left: 16px;
+      right: 16px;
+      background: var(--primary);
+      color: #fff;
+      padding: 14px 18px;
+      border-radius: 16px;
+      display: none;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 800;
+      box-shadow: 0 10px 24px rgba(234, 88, 12, 0.35);
+      z-index: 80;
+      cursor: pointer;
+    }
+
+    /* NAVEGACIÓN INFERIOR */
+    nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 64px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      z-index: 90;
+    }
+    .nav-item {
+      flex: 1;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.72rem;
+      font-weight: 700;
+      gap: 3px;
+      cursor: pointer;
+    }
+    .nav-item span { font-size: 1.25rem; }
+    .nav-item.active { color: var(--primary); }
+
+    .btn-action-main {
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      border: none;
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .btn-green { background: #059669; }
+    .btn-blue { background: #2563eb; }
+    .btn-whatsapp { background: #25d366; }
+    .btn-danger { background: #ef4444; }
+
+    /* MODAL DE FACTURA Y CONTENEDOR PDF */
+    #modal-factura {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      overflow-y: auto;
+    }
+    .factura-wrapper {
+      background: #ffffff;
+      color: #0f172a;
+      width: 100%;
+      max-width: 360px;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    }
+    /* El bloque que se exporta exactamente a PDF */
+    #factura-print-area {
+      background: #ffffff;
+      padding: 16px 12px;
+      font-family: "Courier New", Courier, monospace;
+      color: #111827;
+      border: 1px dashed #cbd5e1;
+      border-radius: 8px;
+    }
+    .fac-head { text-align: center; border-bottom: 2px dashed #94a3b8; padding-bottom: 10px; margin-bottom: 10px; }
+    .fac-title { font-size: 1.15rem; font-weight: 900; text-transform: uppercase; }
+    .fac-sub { font-size: 0.76rem; color: #475569; margin-top: 2px; }
+    .fac-table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 0.82rem; }
+    .fac-table th { text-align: left; border-bottom: 1.5px dashed #64748b; padding-bottom: 6px; font-weight: 800; }
+    .fac-table td { padding: 6px 0; border-bottom: 1px dotted #e2e8f0; }
+    .fac-totals { border-top: 2px dashed #94a3b8; padding-top: 8px; margin-top: 6px; font-size: 0.9rem; font-weight: 800; display: flex; flex-direction: column; gap: 4px; }
+    .fac-foot { text-align: center; font-size: 0.72rem; color: #64748b; margin-top: 12px; }
+
+    #toast-banner {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--accent);
+      color: #fff;
+      font-weight: 800;
+      padding: 10px 22px;
+      border-radius: 30px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+      display: none;
+      z-index: 2000;
+    }
   </style>
 </head>
 <body>
 
-  <div id="toast"></div>
+  <div id="toast-banner"></div>
 
-  <!-- PANTALLA LOGIN -->
-  <div id="mod-auth" class="modal" style="display:flex;">
-    <div style="background:var(--card); border:1px solid var(--b); border-radius:16px; padding:22px; width:100%; max-width:320px; text-align:center;">
-      <h3 style="font-weight:900;">🥘 Las Delicias</h3>
-      <div style="display:flex; gap:6px; background:#090d16; padding:4px; border-radius:10px; margin:14px 0;">
-        <button class="nav-b act" id="b-rol-cli" onclick="setRol('cliente')">Cliente</button>
-        <button class="nav-b" id="b-rol-mes" onclick="setRol('mesero')">Mesero</button>
-        <button class="nav-b" id="b-rol-adm" onclick="setRol('admin')">Admin</button>
+  <!-- PANTALLA INICIAL DE ACCESO -->
+  <div id="modal-login">
+    <div class="auth-box">
+      <div style="font-size:3rem; margin-bottom:6px;">🥘</div>
+      <h2 style="font-weight:900;">Las Delicias de Salomé</h2>
+      <p style="color:var(--muted); font-size:0.85rem; margin-top:4px;">Selecciona tu rol de acceso</p>
+
+      <div class="role-tabs">
+        <button class="role-btn active" id="tab-rol-cli" onclick="elegirRolLogin('cliente')">👤 Cliente</button>
+        <button class="role-btn" id="tab-rol-mes" onclick="elegirRolLogin('mesero')">🍽️ Mesero</button>
+        <button class="role-btn" id="tab-rol-adm" onclick="elegirRolLogin('admin')">🔑 Admin</button>
       </div>
-      <div id="sec-cli">
-        <select id="sel-m" class="inp" style="font-weight:700;">
+
+      <div id="auth-sec-cliente">
+        <label style="font-size:0.75rem; color:var(--muted); font-weight:700; display:block; text-align:left; margin-bottom:6px;">SELECCIONA TU MESA:</label>
+        <select id="auth-mesa-select" class="search-input" style="font-weight:700;">
           <option value="1">Mesa 1</option><option value="2">Mesa 2</option><option value="3">Mesa 3</option><option value="4">Mesa 4</option>
           <option value="5">Mesa 5</option><option value="6">Mesa 6</option><option value="7">Mesa 7</option><option value="8">Mesa 8</option>
         </select>
-        <button class="btn" style="background:var(--g);" onclick="loginCli()">Entrar</button>
+        <button class="btn-action-main btn-green" onclick="ingresarCliente()">Ver Menú y Ordenar</button>
       </div>
-      <div id="sec-stf" style="display:none;">
-        <input type="password" id="pin-in" class="inp" placeholder="PIN" maxlength="4" style="text-align:center; font-size:1.4rem; letter-spacing:6px;">
-        <button class="btn" style="background:var(--g);" onclick="loginStf()">Ingresar</button>
+
+      <div id="auth-sec-staff" style="display:none;">
+        <label style="font-size:0.75rem; color:var(--muted); font-weight:700; display:block; text-align:left; margin-bottom:6px;">INGRESA EL PIN:</label>
+        <input type="password" id="auth-pin-input" class="search-input" placeholder="••••" maxlength="4" inputmode="numeric" style="text-align:center; font-size:1.6rem; letter-spacing:6px;">
+        <button class="btn-action-main btn-green" onclick="ingresarStaff()">Iniciar Sesión</button>
       </div>
     </div>
   </div>
 
   <!-- HEADER -->
   <header>
-    <strong style="display:flex; align-items:center; gap:6px;">🥘 Salomé POS</strong>
-    <span id="top-m" onclick="go('mesas')" style="background:var(--b); padding:4px 10px; border-radius:12px; font-size:0.8rem; font-weight:800; color:var(--p); cursor:pointer;">Mesa 1</span>
+    <div class="brand-logo">
+      <span>🥘 Las Delicias</span>
+    </div>
+    <div class="mesa-pill" id="header-mesa-indicator" onclick="cambiarVista('mesas')">
+      Mesa 1
+    </div>
   </header>
 
-  <!-- PANTALLA 1: MENÚ -->
-  <main class="screen act" id="scr-menu">
-    <input type="text" id="srch" class="inp" placeholder="🔍 Buscar plato..." oninput="drawMenu()">
-    <div style="display:flex; gap:6px; margin-bottom:12px; overflow-x:auto;">
-      <button class="p-btn" onclick="setCat('todos')">Todos</button>
-      <button class="p-btn" style="background:var(--card);" onclick="setCat('desayunos')">Desayunos</button>
-      <button class="p-btn" style="background:var(--card);" onclick="setCat('bebidas')">Bebidas</button>
+  <!-- PÍLDORA FLOTANTE DE COMANDA -->
+  <div id="floating-cart-pill" onclick="cambiarVista('comanda')">
+    <div id="floating-cart-qty">0 platos en orden</div>
+    <div id="floating-cart-total">$0 ›</div>
+  </div>
+
+  <!-- VISTA 1: CARTA / MENÚ -->
+  <main class="screen-view active" id="view-menu">
+    <input type="text" id="menu-search-box" class="search-input" placeholder="🔍 Buscar plato o bebida..." oninput="dibujarMenu()">
+
+    <div class="cat-scroll">
+      <button class="cat-chip active" onclick="filtrarCategoriaMenu('todos')">🔥 Todos</button>
+      <button class="cat-chip" onclick="filtrarCategoriaMenu('desayunos')">🍳 Desayunos</button>
+      <button class="cat-chip" onclick="filtrarCategoriaMenu('bebidas')">☕ Bebidas</button>
     </div>
-    <div id="menu-box"></div>
+
+    <div class="menu-cards-col" id="menu-cards-container"></div>
   </main>
 
-  <!-- PANTALLA 2: MESAS -->
-  <main class="screen" id="scr-mesas">
-    <div class="grid" id="mesas-box"></div>
+  <!-- VISTA 2: MESAS -->
+  <main class="screen-view" id="view-mesas">
+    <div style="font-size:0.8rem; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:12px;">
+      Salón de Mesas
+    </div>
+    <div class="tables-grid" id="tables-grid-container"></div>
   </main>
 
-  <!-- PANTALLA 3: COMANDA -->
-  <main class="screen" id="scr-comanda">
-    <h3 id="com-m-txt" style="margin-bottom:12px;">Mesa 1</h3>
-    <div id="com-list"></div>
-    <div class="card" style="margin-top:14px;">
-      <div style="display:flex; justify-content:space-between; font-size:1.15rem; font-weight:900;">
-        <span>TOTAL:</span><span id="com-tot" style="color:var(--g);">$0</span>
+  <!-- VISTA 3: COMANDA -->
+  <main class="screen-view" id="view-comanda">
+    <h2 id="comanda-mesa-title" style="font-weight:900; margin-bottom:14px;">Mesa 1</h2>
+    <div id="comanda-items-wrapper" style="margin-bottom:16px;"></div>
+
+    <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:16px; box-shadow:var(--card-shadow);">
+      <div style="display:flex; justify-content:space-between; font-size:1.25rem; font-weight:900; margin-bottom:14px;">
+        <span>TOTAL:</span>
+        <span id="comanda-total-number" style="color:var(--accent);">$0</span>
       </div>
-      <button class="btn" style="background:#2563eb;" onclick="verFac(false)">🧾 Ver Factura</button>
-      <button class="btn" style="background:var(--g);" id="b-cobrar" onclick="cobrar()">💵 Cobrar y Facturar</button>
+      <button class="btn-action-main btn-blue" onclick="mostrarFacturaActual(false)">
+        🧾 Ver Factura Detallada
+      </button>
+      <button class="btn-action-main btn-green" id="btn-cobrar-accion" onclick="procesarCobro()">
+        💵 Cobrar y Generar Factura
+      </button>
     </div>
   </main>
 
-  <!-- PANTALLA 4: CIERRE (ADMIN) -->
-  <main class="screen" id="scr-cierre">
-    <div class="card">
-      <small style="color:var(--m); font-weight:700;">VENTAS TOTALES HOY</small>
-      <div id="kpi-caja" style="font-size:1.8rem; font-weight:900; color:var(--g); margin:4px 0;">$0</div>
-      <small id="kpi-cuentas" style="color:var(--m);">0 cobros</small>
+  <!-- VISTA 4: CIERRE Y EXCEL (ADMIN) -->
+  <main class="screen-view" id="view-cierre">
+    <div style="font-size:0.8rem; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:12px;">
+      Arqueo de Caja del Día
     </div>
-    <input type="tel" id="ws-in" class="inp" placeholder="WhatsApp (ej: 573001234567)">
-    <button class="btn" style="background:#25d366;" onclick="enviarWsCierre()">📲 Cierre a WhatsApp</button>
-    <button class="btn" style="background:#15803d;" onclick="exportarExcel()">📊 Descargar Excel (.xlsx)</button>
-    <button class="btn" style="background:#dc2626; margin-top:16px;" onclick="resetCaja()">🗑️ Reiniciar a $0</button>
+
+    <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:16px; margin-bottom:14px; box-shadow:var(--card-shadow);">
+      <div style="font-size:0.75rem; color:var(--muted); font-weight:700;">VENTAS TOTALES HOY</div>
+      <div id="kpi-total-cobrado" style="font-size:1.8rem; font-weight:900; color:var(--accent); margin:4px 0 8px;">$0</div>
+      <div style="font-size:0.85rem; color:var(--muted);" id="kpi-conteo-cuentas">0 pedidos cobrados</div>
+    </div>
+
+    <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:16px; margin-bottom:14px; box-shadow:var(--card-shadow);">
+      <label style="font-size:0.75rem; color:var(--muted); font-weight:700; display:block; margin-bottom:6px;">WHATSAPP DESTINO (ADMIN):</label>
+      <input type="tel" id="admin-ws-input" class="search-input" placeholder="Ej: 573001234567" style="margin-bottom:0;">
+    </div>
+
+    <button class="btn-action-main btn-whatsapp" onclick="enviarReporteWs()">
+      📲 Enviar Resumen al WhatsApp
+    </button>
+    <button class="btn-action-main btn-green" onclick="exportarExcelVentas()">
+      📊 Descargar Ventas en Excel (.xlsx)
+    </button>
+    <button class="btn-action-main btn-danger" onclick="reiniciarCajaDiaria()" style="margin-top:20px;">
+      🗑️ Reiniciar Caja a $0
+    </button>
   </main>
 
-  <!-- MODAL FACTURA -->
-  <div id="mod-fac" class="modal">
-    <div class="ticket">
-      <div style="text-align:center; border-bottom:1px dashed #666; padding-bottom:8px; margin-bottom:8px;">
-        <strong>LAS DELICIAS DE SALOMÉ</strong><br>
-        <small id="fac-sub">Mesa 1 | 2026-09-24</small>
+  <!-- MODAL DE FACTURA PROFESIONAL & DESCARGA PDF -->
+  <div id="modal-factura">
+    <div class="factura-wrapper">
+      
+      <!-- CONTENIDO FORMAL DE LA FACTURA (EXPORTABLE A PDF) -->
+      <div id="factura-print-area">
+        <div class="fac-head">
+          <div class="fac-title">Las Delicias de Salomé</div>
+          <div class="fac-sub">NIT: 901.458.723-1</div>
+          <div class="fac-sub">Dirección: Carrera Principal # 10 - 25</div>
+          <div class="fac-sub">Tel: 300 123 4567</div>
+          <div class="fac-sub" style="margin-top:6px;"><strong id="fac-txt-numero">FACTURA: FAC-001</strong></div>
+          <div class="fac-sub" id="fac-txt-fechahora">2026-09-24 12:00 PM</div>
+          <div class="fac-sub" id="fac-txt-mesa">MESA: 1</div>
+        </div>
+
+        <table class="fac-table">
+          <thead>
+            <tr>
+              <th>DESCRIPCIÓN</th>
+              <th style="text-align:center;">CANT</th>
+              <th style="text-align:right;">VR.UNIT</th>
+              <th style="text-align:right;">TOTAL</th>
+            </tr>
+          </thead>
+          <tbody id="fac-table-body"></tbody>
+        </table>
+
+        <div class="fac-totals">
+          <div style="display:flex; justify-content:space-between;">
+            <span>SUBTOTAL:</span>
+            <span id="fac-val-subtotal">$0</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:#64748b;">
+            <span>IMPOCONSUMO (0%):</span>
+            <span>$0</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:1.05rem; font-weight:900; margin-top:4px;">
+            <span>TOTAL FACTURA:</span>
+            <span id="fac-val-total">$0</span>
+          </div>
+        </div>
+
+        <div class="fac-foot">
+          <div>¡Muchas gracias por su preferencia!</div>
+          <div style="margin-top:2px;">Régimen Simple de Tributación</div>
+        </div>
       </div>
-      <table style="width:100%; border-collapse:collapse; margin-bottom:8px;" id="fac-tb"></table>
-      <div style="border-top:1px dashed #666; padding-top:6px; display:flex; justify-content:space-between; font-weight:900;">
-        <span>TOTAL:</span><span id="fac-tot">$0</span>
+
+      <!-- BOTONES DE ACCIÓN DE FACTURA -->
+      <div style="margin-top:14px; display:flex; flex-direction:column; gap:8px;">
+        <button class="btn-action-main btn-blue" onclick="descargarFacturaPDF()">
+          📄 Descargar Factura PDF
+        </button>
+        <button class="btn-action-main btn-whatsapp" onclick="compartirFacturaWs()">
+          📲 Enviar Factura a WhatsApp
+        </button>
+        <button onclick="cerrarFacturaModal()" style="padding:10px; background:#f1f5f9; color:#0f172a; border:none; border-radius:10px; font-weight:800; cursor:pointer;">
+          Cerrar
+        </button>
       </div>
-      <div class="no-p" style="margin-top:14px; display:flex; flex-direction:column; gap:6px;">
-        <button class="btn" style="background:#111; padding:8px;" onclick="window.print()">🖨️ Imprimir / PDF</button>
-        <button class="btn" style="background:#25d366; padding:8px;" onclick="wsFac()">📲 WhatsApp</button>
-        <button class="btn" style="background:#e2e8f0; color:#111; padding:8px;" onclick="document.getElementById('mod-fac').style.display='none'">Cerrar</button>
-      </div>
+
     </div>
   </div>
 
-  <!-- NAVEGACIÓN -->
+  <!-- NAVEGACIÓN INFERIOR (TAB BAR) -->
   <nav>
-    <button class="nav-b act" id="nb-menu" onclick="go('menu')"><span>📋</span>Carta</button>
-    <button class="nav-b" id="nb-mesas" onclick="go('mesas')"><span>🪑</span>Mesas</button>
-    <button class="nav-b" id="nb-comanda" onclick="go('comanda')"><span>🧾</span>Comanda</button>
-    <button class="nav-b" id="nb-cierre" onclick="go('cierre')"><span>📊</span>Cierre</button>
-    <button class="nav-b" onclick="document.getElementById('mod-auth').style.display='flex'"><span>🚪</span>Salir</button>
+    <button class="nav-item active" id="tab-btn-menu" onclick="cambiarVista('menu')">
+      <span>📋</span>Carta
+    </button>
+    <button class="nav-item" id="tab-btn-mesas" onclick="cambiarVista('mesas')">
+      <span>🪑</span>Mesas
+    </button>
+    <button class="nav-item" id="tab-btn-comanda" onclick="cambiarVista('comanda')">
+      <span>🧾</span>Comanda
+    </button>
+    <button class="nav-item" id="tab-btn-cierre" onclick="cambiarVista('cierre')">
+      <span>📊</span>Cierre
+    </button>
+    <button class="nav-item" onclick="cerrarSesionApp()">
+      <span>🚪</span>Salir
+    </button>
   </nav>
 
   <script>
-    const ITEMS = [
-      { id:1, n:"Arroz con Huevo", p:9000, c:"desayunos", img:"./imagenes/arroz_huevo.jpg" },
-      { id:2, n:"Desayuno Salomé", p:15000, c:"desayunos", img:"./imagenes/huevos_completos.jpg" },
-      { id:3, n:"Huevos Jamón Cazuela", p:12000, c:"desayunos", img:"./imagenes/huevos_cazuela.jpg" },
-      { id:4, n:"Huevos Rancheros", p:13000, c:"desayunos", img:"./imagenes/huevos_madera.jpg" },
-      { id:5, n:"Tamal Tradicional", p:16000, c:"desayunos", img:"./imagenes/tamal.jpg" },
-      { id:6, n:"Caldo de Costilla", p:14000, c:"desayunos", img:"./imagenes/caldo_costilla.jpg" },
-      { id:7, n:"Calentado Paisa", p:16000, c:"desayunos", img:"./imagenes/calentado_paisa.jpg" },
-      { id:8, n:"Moñona Especial", p:22000, c:"desayunos", img:"./imagenes/monona.jpg" },
-      { id:9, n:"Plato de Frutas", p:8000, c:"desayunos", img:"./imagenes/frutas.jpg" },
-      { id:10, n:"Chocolate con Queso", p:7000, c:"bebidas", img:"./imagenes/chocolate.jpg" },
-      { id:11, n:"Café Tinto", p:3500, c:"bebidas", img:"./imagenes/cafe.jpg" }
+    const PIN_MESERO = "1234";
+    const PIN_ADMIN = "9999";
+
+    let usuarioRol = 'cliente';
+    let rolModalElegido = 'cliente';
+    let categoriaActiva = 'todos';
+    let mesaActivaId = 1;
+    let facturaMemoria = null;
+
+    let mesas = JSON.parse(localStorage.getItem("salome_mesas") || "null") || 
+                Array.from({ length: 8 }, (_, i) => ({ id: i + 1, items: [] }));
+
+    const fmt = (v) => '$' + Number(v || 0).toLocaleString('es-CO');
+
+    function notify(txt) {
+      const t = document.getElementById('toast-banner');
+      t.innerText = txt;
+      t.style.display = 'block';
+      setTimeout(() => { t.style.display = 'none'; }, 1600);
+    }
+
+    // CATÁLOGO COMPLETO VINCULADO A TUS FOTOS REALES
+    const PRODUCTOS = [
+      { id: 1, name: "Arroz con Huevo Frito", price: 9000, cat: "desayunos", desc: "Arroz blanco caliente acompañado de huevo frito con yema tierna", img: "imagenes/arroz_huevo.jpg" },
+      { id: 2, name: "Desayuno Salomé Completo", price: 15000, cat: "desayunos", desc: "Huevos revueltos, salchicha, arepa, pandebono, queso y chocolate", img: "imagenes/huevos_completos.jpg" },
+      { id: 3, name: "Huevos con Jamón en Cazuela", price: 12000, cat: "desayunos", desc: "Huevos revueltos tiernos con jamón en sartén caliente y jugo", img: "imagenes/huevos_cazuela.jpg" },
+      { id: 4, name: "Huevos Rancheros en Tabla", price: 13000, cat: "desayunos", desc: "Huevos revueltos con salchicha en sartén, pan tostado y arepa", img: "imagenes/huevos_madera.jpg" },
+      { id: 5, name: "Tamal Tradicional con Chocolate", price: 16000, cat: "desayunos", desc: "Tamal en hoja de plátano con panes campesinos y chocolate", img: "imagenes/tamal.jpg" },
+      { id: 6, name: "Caldo de Costilla Casero", price: 14000, cat: "desayunos", desc: "Costilla de res suave en caldo criollo con papa y cilantro picado", img: "imagenes/caldo_costilla.jpg" },
+      { id: 7, name: "Calentado Paisa Especial", price: 16000, cat: "desayunos", desc: "Fríjoles refritos con arroz, huevo montado y pan campesino", img: "imagenes/calentado_paisa.jpg" },
+      { id: 8, name: "Moñona Salomé Especial", price: 22000, cat: "desayunos", desc: "Arroz, carne en hogao, pechuga/chuleta, huevos fritos y patacón", img: "imagenes/monona.jpg" },
+      { id: 9, name: "Plato de Frutas Frescas", price: 8000, cat: "desayunos", desc: "Selección fresca de sandía, melón, papaya, piña dulce y fresa", img: "imagenes/frutas.jpg" },
+      { id: 10, name: "Chocolate Especial con Queso", price: 7000, cat: "bebidas", desc: "Taza de chocolate santafereño con queso, pan y almojábana", img: "imagenes/chocolate.jpg" },
+      { id: 11, name: "Café Tinto Campesino", price: 3500, cat: "bebidas", desc: "Taza de café recién filtrado, aroma intenso y sabor tradicional", img: "imagenes/cafe.jpg" }
     ];
 
-    let rol = 'cliente', mAct = 1, curCat = 'todos', facData = null;
-    let mesas = JSON.parse(localStorage.getItem("s_m") || "null") || Array.from({length:8}, (_,i)=>({id:i+1, items:[]}));
-    const fmt = v => '$' + Number(v||0).toLocaleString('es-CO');
+    /* CONTROL DE ROLES Y LOGIN */
+    function elegirRolLogin(r) {
+      rolModalElegido = r;
+      ['cli', 'mes', 'adm'].forEach(k => document.getElementById(`tab-rol-${k}`).classList.remove('active'));
+      document.getElementById(`tab-rol-${r.slice(0,3)}`).classList.add('active');
 
-    function toast(m) {
-      const t = document.getElementById('toast');
-      t.innerText = m; t.style.display = 'block';
-      setTimeout(() => t.style.display = 'none', 1400);
-    }
-
-    function setRol(r) {
-      rol = r;
-      ['cli','mes','adm'].forEach(x => document.getElementById(`b-rol-${x}`).classList.remove('act'));
-      document.getElementById(`b-rol-${r.slice(0,3)}`).classList.add('act');
-      document.getElementById('sec-cli').style.display = r === 'cliente' ? 'block' : 'none';
-      document.getElementById('sec-stf').style.display = r !== 'cliente' ? 'block' : 'none';
-    }
-
-    function loginCli() {
-      mAct = Number(document.getElementById('sel-m').value);
-      initUser();
-      go('menu');
-    }
-
-    function loginStf() {
-      const p = document.getElementById('pin-in').value;
-      if (rol === 'mesero' && (p === '1234' || p === '9999') || rol === 'admin' && p === '9999') {
-        initUser();
-        go('mesas');
-      } else alert('PIN incorrecto');
-    }
-
-    function initUser() {
-      document.getElementById('top-m').innerText = `Mesa ${mAct}`;
-      document.getElementById('nb-cierre').style.display = rol === 'admin' ? 'flex' : 'none';
-      document.getElementById('b-cobrar').innerText = rol === 'cliente' ? 'Enviar Pedido' : '💵 Cobrar y Facturar';
-      document.getElementById('mod-auth').style.display = 'none';
-      document.getElementById('ws-in').value = localStorage.getItem("s_ws") || "";
-    }
-
-    function go(s) {
-      document.querySelectorAll('.screen').forEach(x => x.classList.remove('act'));
-      document.querySelectorAll('.nav-b').forEach(x => x.classList.remove('act'));
-      document.getElementById(`scr-${s}`).classList.add('act');
-      if (document.getElementById(`nb-${s}`)) document.getElementById(`nb-${s}`).classList.add('act');
-      if (s === 'menu') drawMenu();
-      if (s === 'mesas') drawMesas();
-      if (s === 'comanda') drawComanda();
-      if (s === 'cierre') drawCierre();
-    }
-
-    function setCat(c) { curCat = c; drawMenu(); }
-
-    function drawMenu() {
-      const q = (document.getElementById('srch')?.value || '').toLowerCase();
-      let f = curCat === 'todos' ? ITEMS : ITEMS.filter(x => x.c === curCat);
-      if (q) f = f.filter(x => x.n.toLowerCase().includes(q));
-      
-      document.getElementById('menu-box').innerHTML = f.map(p => `
-        <div class="card food">
-          <img src="${p.img}" loading="lazy">
-          <div style="flex:1;">
-            <div style="font-weight:800;">${p.n}</div>
-            <div style="color:var(--g); font-weight:900; margin-top:4px;">${fmt(p.p)}</div>
-          </div>
-          <button class="p-btn" onclick="add(${p.id})">+ Pedir</button>
-        </div>
-      `).join('');
-    }
-
-    function add(id) {
-      const p = ITEMS.find(x => x.id === id);
-      let m = mesas.find(x => x.id === mAct);
-      let it = m.items.find(x => x.n === p.n);
-      it ? it.q++ : m.items.push({ n:p.n, p:p.p, q:1 });
-      localStorage.setItem("s_m", JSON.stringify(mesas));
-      toast(`+1 ${p.n}`);
-    }
-
-    function drawMesas() {
-      document.getElementById('mesas-box').innerHTML = mesas.map(m => {
-        const tot = m.items.reduce((a,b) => a + b.p * b.q, 0);
-        return `
-          <div class="m-box ${m.id === mAct ? 'sel' : ''}" onclick="mAct=${m.id}; document.getElementById('top-m').innerText='Mesa ${m.id}'; go(rol==='cliente'?'menu':'comanda')">
-            <div style="display:flex; justify-content:space-between; font-weight:800;">
-              <span>Mesa ${m.id}</span>
-              <span style="color:${m.items.length?'#fb923c':'#34d399'}; font-size:0.75rem;">${m.items.length?'OCUPADA':'LIBRE'}</span>
-            </div>
-            <div style="font-size:1.1rem; font-weight:900; margin-top:8px;">${m.items.length ? fmt(tot) : '-'}</div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    function drawComanda() {
-      const m = mesas.find(x => x.id === mAct);
-      document.getElementById('com-m-txt').innerText = `Mesa ${mAct}`;
-      let tot = 0;
-      document.getElementById('com-list').innerHTML = m.items.length ? m.items.map(it => {
-        tot += it.p * it.q;
-        return `
-          <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-            <div><strong>${it.n}</strong><br><small style="color:var(--m);">${fmt(it.p)}</small></div>
-            <div style="display:flex; align-items:center; gap:8px;">
-              <button class="p-btn" style="background:#0f172a;" onclick="modQty('${it.n}', -1)">-</button>
-              <strong>${it.q}</strong>
-              <button class="p-btn" style="background:#0f172a;" onclick="modQty('${it.n}', 1)">+</button>
-            </div>
-          </div>
-        `;
-      }).join('') : '<div style="text-align:center; color:var(--m); padding:20px;">Sin pedidos aún.</div>';
-      document.getElementById('com-tot').innerText = fmt(tot);
-    }
-
-    function modQty(n, d) {
-      let m = mesas.find(x => x.id === mAct);
-      let it = m.items.find(x => x.n === n);
-      if (it) {
-        it.q += d;
-        if (it.q <= 0) m.items = m.items.filter(x => x.n !== n);
-        localStorage.setItem("s_m", JSON.stringify(mesas));
-        drawComanda();
+      if (r === 'cliente') {
+        document.getElementById('auth-sec-cliente').style.display = 'block';
+        document.getElementById('auth-sec-staff').style.display = 'none';
+      } else {
+        document.getElementById('auth-sec-cliente').style.display = 'none';
+        document.getElementById('auth-sec-staff').style.display = 'block';
+        document.getElementById('auth-pin-input').value = '';
       }
     }
 
-    function verFac(clear) {
-      let m = mesas.find(x => x.id === mAct);
-      if (!m.items.length && !clear) return alert('Mesa vacía');
-      const tot = m.items.reduce((a,b) => a + b.p * b.q, 0);
-      facData = { m:mAct, items:[...m.items], tot:tot, d:new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) };
-      
-      document.getElementById('fac-sub').innerText = `Mesa ${mAct} | ${new Date().toLocaleDateString()} ${facData.d}`;
-      document.getElementById('fac-tb').innerHTML = facData.items.map(x => `
-        <tr><td>${x.q}x ${x.n}</td><td style="text-align:right;">${fmt(x.p*x.q)}</td></tr>
-      `).join('');
-      document.getElementById('fac-tot').innerText = fmt(tot);
-      document.getElementById('mod-fac').style.display = 'flex';
+    function ingresarCliente() {
+      mesaActivaId = Number(document.getElementById('auth-mesa-select').value);
+      usuarioRol = 'cliente';
+      activarPermisosRol();
+      document.getElementById('modal-login').style.display = 'none';
+      cambiarVista('menu');
+      notify(`Mesa ${mesaActivaId} activa`);
     }
 
-    function cobrar() {
-      let m = mesas.find(x => x.id === mAct);
-      if (!m.items.length) return alert('Mesa vacía');
-      if (rol === 'cliente') { alert(`Pedido de Mesa ${mAct} enviado a cocina`); return; }
+    function ingresarStaff() {
+      const pin = document.getElementById('auth-pin-input').value.trim();
+      if (rolModalElegido === 'mesero' && (pin === PIN_MESERO || pin === PIN_ADMIN)) {
+        usuarioRol = 'mesero';
+      } else if (rolModalElegido === 'admin' && pin === PIN_ADMIN) {
+        usuarioRol = 'admin';
+      } else {
+        return alert('PIN incorrecto.');
+      }
+      activarPermisosRol();
+      document.getElementById('modal-login').style.display = 'none';
+      cambiarVista('mesas');
+    }
 
-      const tot = m.items.reduce((a,b) => a + b.p * b.q, 0);
-      let v = JSON.parse(localStorage.getItem("s_v") || "[]");
-      v.push({ id:v.length+1, m:mAct, it:m.items.map(x=>`${x.q}x ${x.n}`).join(', '), tot:tot, f:new Date().toLocaleDateString(), h:new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) });
-      localStorage.setItem("s_v", JSON.stringify(v));
+    function cerrarSesionApp() {
+      document.getElementById('modal-login').style.display = 'flex';
+    }
 
-      verFac(true);
+    function activarPermisosRol() {
+      document.getElementById('header-mesa-indicator').innerText = `Mesa ${mesaActivaId}`;
+      const btnCierre = document.getElementById('tab-btn-cierre');
+      const btnCobrar = document.getElementById('btn-cobrar-accion');
+
+      if (usuarioRol === 'cliente') {
+        btnCierre.style.display = 'none';
+        btnCobrar.innerText = 'Pedir Cuenta / Ver Factura';
+      } else if (usuarioRol === 'mesero') {
+        btnCierre.style.display = 'none';
+        btnCobrar.innerText = 'Cobrar y Generar Factura';
+      } else if (usuarioRol === 'admin') {
+        btnCierre.style.display = 'flex';
+        btnCobrar.innerText = 'Cobrar y Generar Factura';
+        document.getElementById('admin-ws-input').value = localStorage.getItem("salome_ws_phone") || "";
+      }
+    }
+
+    /* CAMBIO DE PANTALLA */
+    function cambiarVista(vista) {
+      document.querySelectorAll('.screen-view').forEach(v => v.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+
+      const target = document.getElementById(`view-${vista}`);
+      if (target) target.classList.add('active');
+
+      const btnNav = document.getElementById(`tab-btn-${vista}`);
+      if (btnNav) btnNav.classList.add('active');
+
+      if (vista === 'menu') dibujarMenu();
+      if (vista === 'mesas') dibujarMesas();
+      if (vista === 'comanda') dibujarComanda();
+      if (vista === 'cierre') dibujarCierre();
+
+      actualizarBarraFlotante();
+    }
+
+    /* MENÚ Y PRODUCTOS */
+    function filtrarCategoriaMenu(c) {
+      categoriaActiva = c;
+      document.querySelectorAll('.cat-chip').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+      dibujarMenu();
+    }
+
+    function dibujarMenu() {
+      const cont = document.getElementById('menu-cards-container');
+      cont.innerHTML = '';
+
+      const query = (document.getElementById('menu-search-box')?.value || '').toLowerCase().trim();
+
+      let lista = categoriaActiva === 'todos' 
+        ? PRODUCTOS 
+        : PRODUCTOS.filter(p => p.cat === categoriaActiva);
+
+      if (query) {
+        lista = lista.filter(p => p.name.toLowerCase().includes(query));
+      }
+
+      lista.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'card-item';
+        card.innerHTML = `
+          <div class="card-img-wrap">
+            <img src="./${p.img}" alt="${p.name}" loading="lazy" 
+                 onerror="if (!this.dataset.retry) { this.dataset.retry=1; this.src='${p.img}'; } else { this.parentElement.innerHTML='<div style=\'display:flex;align-items:center;justify-content:center;height:100%;font-size:1.8rem;\'>🍳</div>'; }">
+          </div>
+          <div class="card-content">
+            <div class="card-name">${p.name}</div>
+            <div class="card-desc">${p.desc}</div>
+            <div class="card-footer">
+              <span class="card-price">${fmt(p.price)}</span>
+              <button class="btn-add-food" onclick="agregarAlPedido(${p.id})">+ Agregar</button>
+            </div>
+          </div>
+        `;
+        cont.appendChild(card);
+      });
+    }
+
+    function agregarAlPedido(id) {
+      const prod = PRODUCTOS.find(x => x.id === id);
+      if (!prod) return;
+
+      let m = mesas.find(x => x.id === mesaActivaId);
+      const ex = m.items.find(i => i.name === prod.name);
+
+      if (ex) {
+        ex.qty += 1;
+      } else {
+        m.items.push({ name: prod.name, price: prod.price, qty: 1 });
+      }
+
+      localStorage.setItem("salome_mesas", JSON.stringify(mesas));
+      actualizarBarraFlotante();
+      notify(`+1 ${prod.name}`);
+    }
+
+    /* BURBUJA FLOTANTE */
+    function actualizarBarraFlotante() {
+      const pill = document.getElementById('floating-cart-pill');
+      const m = mesas.find(x => x.id === mesaActivaId);
+
+      if (!m || m.items.length === 0 || document.getElementById('view-comanda').classList.contains('active')) {
+        pill.style.display = 'none';
+        return;
+      }
+
+      const totalCant = m.items.reduce((a, b) => a + b.qty, 0);
+      const subtotal = m.items.reduce((a, b) => a + (b.price * b.qty), 0);
+
+      document.getElementById('floating-cart-qty').innerText = `${totalCant} ${totalCant === 1 ? 'plato' : 'platos'} en Mesa ${mesaActivaId}`;
+      document.getElementById('floating-cart-total').innerText = `${fmt(subtotal)} ›`;
+      pill.style.display = 'flex';
+    }
+
+    /* SALÓN DE MESAS */
+    function dibujarMesas() {
+      const grid = document.getElementById('tables-grid-container');
+      grid.innerHTML = '';
+
+      mesas.forEach(m => {
+        const isBusy = m.items.length > 0;
+        const total = m.items.reduce((a, b) => a + (b.price * b.qty), 0);
+
+        const box = document.createElement('div');
+        box.className = `table-box ${m.id === mesaActivaId ? 'active' : ''} ${isBusy ? 'busy' : ''}`;
+        box.onclick = () => {
+          mesaActivaId = m.id;
+          document.getElementById('header-mesa-indicator').innerText = `Mesa ${m.id}`;
+          dibujarMesas();
+          if (usuarioRol === 'cliente') cambiarVista('menu');
+          else cambiarVista('comanda');
+        };
+
+        box.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-weight:900; font-size:1.1rem;">Mesa ${m.id}</span>
+            <span style="font-size:0.7rem; font-weight:800; color:${isBusy ? '#ea580c' : '#10b981'};">
+              ${isBusy ? 'OCUPADA' : 'LIBRE'}
+            </span>
+          </div>
+          <div style="font-size:1.25rem; font-weight:900; color:var(--text); margin-top:8px;">
+            ${isBusy ? fmt(total) : '-'}
+          </div>
+        `;
+        grid.appendChild(box);
+      });
+    }
+
+    /* COMANDA */
+    function dibujarComanda() {
+      const m = mesas.find(x => x.id === mesaActivaId);
+      document.getElementById('comanda-mesa-title').innerText = `Mesa ${mesaActivaId}`;
+      const wrap = document.getElementById('comanda-items-wrapper');
+      wrap.innerHTML = '';
+
+      let subtotal = 0;
+
+      if (m.items.length === 0) {
+        wrap.innerHTML = `<div style="text-align:center; color:var(--muted); padding:30px 0;">No hay consumos en esta mesa.</div>`;
+        document.getElementById('comanda-total-number').innerText = '$0';
+        return;
+      }
+
+      m.items.forEach(it => {
+        const itemTot = it.price * it.qty;
+        subtotal += itemTot;
+
+        const row = document.createElement('div');
+        row.style.display = 'flex';
+        row.style.justifyContent = 'space-between';
+        row.style.alignItems = 'center';
+        row.style.padding = '12px 0';
+        row.style.borderBottom = '1px solid var(--border)';
+
+        row.innerHTML = `
+          <div>
+            <div style="font-weight:800; font-size:0.95rem;">${it.name}</div>
+            <div style="font-size:0.8rem; color:var(--muted);">${it.qty} x ${fmt(it.price)} = <strong>${fmt(itemTot)}</strong></div>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <button onclick="ajustarCantidad('${it.name}', -1)" style="width:34px; height:34px; border-radius:8px; border:1px solid var(--border); background:#fff; font-weight:900; font-size:1.1rem; cursor:pointer;">-</button>
+            <span style="font-weight:900; min-width:18px; text-align:center;">${it.qty}</span>
+            <button onclick="ajustarCantidad('${it.name}', 1)" style="width:34px; height:34px; border-radius:8px; border:1px solid var(--border); background:#fff; font-weight:900; font-size:1.1rem; cursor:pointer;">+</button>
+          </div>
+        `;
+        wrap.appendChild(row);
+      });
+
+      document.getElementById('comanda-total-number').innerText = fmt(subtotal);
+    }
+
+    function ajustarCantidad(nombre, delta) {
+      let m = mesas.find(x => x.id === mesaActivaId);
+      const it = m.items.find(i => i.name === nombre);
+      if (!it) return;
+
+      it.qty += delta;
+      if (it.qty <= 0) {
+        m.items = m.items.filter(i => i.name !== nombre);
+      }
+
+      localStorage.setItem("salome_mesas", JSON.stringify(mesas));
+      dibujarComanda();
+      actualizarBarraFlotante();
+    }
+
+    /* MOTOR GENERADOR DE FACTURA */
+    function mostrarFacturaActual(esCobroFinal) {
+      let m = mesas.find(x => x.id === mesaActivaId);
+      if (!m.items.length && !esCobroFinal) return alert('No hay consumos en esta mesa.');
+
+      const ahora = new Date();
+      const consecutivo = Math.floor(1000 + Math.random() * 9000);
+
+      facturaMemoria = {
+        orden: `FAC-${consecutivo}`,
+        mesa: mesaActivaId,
+        items: [...m.items],
+        total: m.items.reduce((a, b) => a + (b.price * b.qty), 0),
+        fecha: ahora.toLocaleDateString(),
+        hora: ahora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+
+      document.getElementById('fac-txt-numero').innerText = `FACTURA: ${facturaMemoria.orden}`;
+      document.getElementById('fac-txt-fechahora').innerText = `${facturaMemoria.fecha} - ${facturaMemoria.hora}`;
+      document.getElementById('fac-txt-mesa').innerText = `MESA: ${facturaMemoria.mesa}`;
+
+      const tbody = document.getElementById('fac-table-body');
+      tbody.innerHTML = facturaMemoria.items.map(it => `
+        <tr>
+          <td><strong>${it.name}</strong></td>
+          <td style="text-align:center;">${it.qty}</td>
+          <td style="text-align:right;">${fmt(it.price)}</td>
+          <td style="text-align:right; font-weight:800;">${fmt(it.price * it.qty)}</td>
+        </tr>
+      `).join('');
+
+      document.getElementById('fac-val-subtotal').innerText = fmt(facturaMemoria.total);
+      document.getElementById('fac-val-total').innerText = fmt(facturaMemoria.total);
+
+      document.getElementById('modal-factura').style.display = 'flex';
+    }
+
+    function procesarCobro() {
+      let m = mesas.find(x => x.id === mesaActivaId);
+      if (!m.items.length) return alert('La mesa no tiene consumos.');
+
+      if (usuarioRol === 'cliente') {
+        mostrarFacturaActual(false);
+        return;
+      }
+
+      const total = m.items.reduce((a, b) => a + (b.price * b.qty), 0);
+      const ahora = new Date();
+      let ventas = JSON.parse(localStorage.getItem("salome_ventas") || "[]");
+      const nuevoId = ventas.length + 1;
+
+      mostrarFacturaActual(true);
+      document.getElementById('fac-txt-numero').innerText = `FACTURA: FAC-00${nuevoId}`;
+
+      ventas.push({
+        id: nuevoId,
+        mesa: mesaActivaId,
+        items: m.items.map(i => `${i.qty}x ${i.name} (${fmt(i.price)})`).join(', '),
+        total: total,
+        fecha: ahora.toLocaleDateString(),
+        hora: ahora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      });
+
+      localStorage.setItem("salome_ventas", JSON.stringify(ventas));
       m.items = [];
-      localStorage.setItem("s_m", JSON.stringify(mesas));
-      drawComanda();
+      localStorage.setItem("salome_mesas", JSON.stringify(mesas));
+
+      dibujarComanda();
+      actualizarBarraFlotante();
+      notify(`Mesa ${mesaActivaId} cobrada con éxito`);
     }
 
-    function wsFac() {
-      if (!facData) return;
-      let t = `*🧾 FACTURA - LAS DELICIAS DE SALOMÉ*\nMesa: ${facData.m} (${facData.d})\n------------------------\n`;
-      facData.items.forEach(x => t += `${x.q}x ${x.n} - ${fmt(x.p * x.q)}\n`);
-      t += `------------------------\n*TOTAL: ${fmt(facData.tot)}*\n¡Buen provecho!`;
-      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(t)}`, '_blank');
+    function cerrarFacturaModal() {
+      document.getElementById('modal-factura').style.display = 'none';
     }
 
-    function drawCierre() {
-      let v = JSON.parse(localStorage.getItem("s_v") || "[]");
-      document.getElementById('kpi-caja').innerText = fmt(v.reduce((a,b) => a + b.tot, 0));
-      document.getElementById('kpi-cuentas').innerText = `${v.length} cuentas cobradas`;
+    /* GENERACIÓN DIRECTA DE PDF REAL */
+    function descargarFacturaPDF() {
+      const elemento = document.getElementById('factura-print-area');
+      const opt = {
+        margin:       [10, 10, 10, 10],
+        filename:     `Factura_${facturaMemoria ? facturaMemoria.orden : 'Salome'}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true },
+        jsPDF:        { unit: 'mm', format: [80, 200], orientation: 'portrait' }
+      };
+
+      notify('Generando documento PDF...');
+      html2pdf().set(opt).from(elemento).save();
     }
 
-    function enviarWsCierre() {
-      let v = JSON.parse(localStorage.getItem("s_v") || "[]");
-      if (!v.length) return alert('No hay ventas registradas');
-      const tel = document.getElementById('ws-in').value.trim();
-      if (!tel) return alert('Ingresa el número con código de país');
-      localStorage.setItem("s_ws", tel);
+    /* ENVIAR FACTURA A WHATSAPP */
+    function compartirFacturaWs() {
+      if (!facturaMemoria) return;
+      let msg = `*🧾 FACTURA DE VENTA - LAS DELICIAS DE SALOMÉ*\n`;
+      msg += `NIT: 901.458.723-1\n`;
+      msg += `${facturaMemoria.orden}\n`;
+      msg += `Mesa: ${facturaMemoria.mesa} | ${facturaMemoria.fecha} (${facturaMemoria.hora})\n`;
+      msg += `------------------------------------\n`;
+      msg += `*DETALLE DE CONSUMO:*\n`;
 
-      let t = `*🥘 CIERRE DE CAJA - LAS DELICIAS*\nFecha: ${new Date().toLocaleDateString()}\nTotal ventas: ${fmt(v.reduce((a,b)=>a+b.tot,0))}\nCuentas: ${v.length}\n`;
-      window.open(`https://api.whatsapp.com/send?phone=${encodeURIComponent(tel)}&text=${encodeURIComponent(t)}`, '_blank');
+      facturaMemoria.items.forEach(it => {
+        msg += `• ${it.qty}x ${it.name}\n`;
+        msg += `   Valor Unitario: ${fmt(it.price)} | Subtotal: ${fmt(it.price * it.qty)}\n`;
+      });
+
+      msg += `------------------------------------\n`;
+      msg += `*TOTAL A PAGAR: ${fmt(facturaMemoria.total)}*\n`;
+      msg += `------------------------------------\n`;
+      msg += `¡Muchas gracias por su preferencia! 🥘`;
+
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
     }
 
-    function exportarExcel() {
-      let v = JSON.parse(localStorage.getItem("s_v") || "[]");
-      if (!v.length) return alert('No hay ventas registradas');
-      const d = v.map(x => ({ "Nº":x.id, "Fecha":x.f, "Hora":x.h, "Mesa":`Mesa ${x.m}`, "Platos":x.it, "Total":x.tot }));
-      d.push({ "Nº":"TOTAL", "Fecha":"", "Hora":"", "Mesa":"", "Platos":"", "Total":v.reduce((a,b)=>a+b.tot,0) });
-      const ws = XLSX.utils.json_to_sheet(d), wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Ventas");
-      XLSX.writeFile(wb, `Ventas_${new Date().toISOString().slice(0,10)}.xlsx`);
+    /* CIERRE DE CAJA */
+    function dibujarCierre() {
+      let ventas = JSON.parse(localStorage.getItem("salome_ventas") || "[]");
+      const cobrado = ventas.reduce((a, b) => a + Number(b.total), 0);
+      document.getElementById('kpi-total-cobrado').innerText = fmt(cobrado);
+      document.getElementById('kpi-conteo-cuentas').innerText = `${ventas.length} cuentas cobradas hoy`;
     }
 
-    function resetCaja() {
-      if (confirm('¿Reiniciar arqueo a $0?')) {
-        localStorage.removeItem("s_v");
-        drawCierre();
-        toast('Caja reiniciada');
+    function enviarReporteWs() {
+      let ventas = JSON.parse(localStorage.getItem("salome_ventas") || "[]");
+      if (ventas.length === 0) return alert('No hay ventas registradas hoy.');
+
+      const phone = document.getElementById('admin-ws-input').value.trim();
+      if (!phone) return alert('Ingresa el número de WhatsApp con código de país (ej: 573001234567).');
+
+      localStorage.setItem("salome_ws_phone", phone);
+      const total = ventas.reduce((a, b) => a + Number(b.total), 0);
+
+      let msg = `*🥘 BALANCE DIARIO - LAS DELICIAS DE SALOMÉ*\n`;
+      msg += `📅 Fecha: ${new Date().toLocaleDateString()}\n`;
+      msg += `🧾 Cuentas cobradas: ${ventas.length}\n`;
+      msg += `💵 TOTAL EN CAJA: ${fmt(total)}\n`;
+      msg += `------------------------------------\n`;
+      ventas.forEach(v => {
+        msg += `• Orden #${v.id} (Mesa ${v.mesa}): ${fmt(v.total)} - ${v.hora}\n`;
+      });
+
+      window.open(`https://api.whatsapp.com/send?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(msg)}`, '_blank');
+    }
+
+    function exportarExcelVentas() {
+      let ventas = JSON.parse(localStorage.getItem("salome_ventas") || "[]");
+      if (ventas.length === 0) return alert('No hay ventas registradas.');
+
+      const rows = ventas.map(v => ({
+        "Nº Orden": v.id,
+        "Fecha": v.fecha,
+        "Hora": v.hora,
+        "Mesa": `Mesa ${v.mesa}`,
+        "Detalle de Platos": v.items,
+        "Total ($)": Number(v.total)
+      }));
+
+      const total = ventas.reduce((a, b) => a + Number(b.total), 0);
+      rows.push({
+        "Nº Orden": "TOTAL",
+        "Fecha": "",
+        "Hora": "",
+        "Mesa": "",
+        "Detalle de Platos": "ARQUEO TOTAL DEL DÍA",
+        "Total ($)": total
+      });
+
+      const ws = XLSX.utils.json_to_sheet(rows);
+      ws['!cols'] = [{ wch: 10 }, { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 45 }, { wch: 16 }];
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Ventas_Diarias");
+      XLSX.writeFile(wb, `Ventas_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    }
+
+    function reiniciarCajaDiaria() {
+      if (confirm('¿Seguro que deseas reiniciar el arqueo a $0?')) {
+        localStorage.removeItem("salome_ventas");
+        dibujarCierre();
+        notify('Caja reiniciada a $0');
       }
     }
 
-    drawMenu();
+    // Arranque
+    dibujarMenu();
+    dibujarMesas();
   </script>
 </body>
 </html>
