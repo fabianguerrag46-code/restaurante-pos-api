@@ -3,489 +3,367 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Las Delicias de Salomé - POS Professional</title>
+  <title>Las Delicias de Salomé</title>
   
-  <!-- SheetJS para exportar arqueo a Excel (.xlsx) -->
+  <!-- SheetJS para descarga en Excel real -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <style>
     :root {
-      --pos-bg: #000000;
-      --pos-panel: #0a0e17;
-      --pos-card: #151a24;
-      --pos-border: rgba(255, 255, 255, 0.1);
-      --pos-blue: #2563eb;
-      --pos-blue-hover: #1d4ed8;
-      --text-main: #ffffff;
-      --text-muted: #94a3b8;
-      
-      /* Colores de los bloques de categoría estilo Toast/Square */
-      --cat-orange: #ea580c;
-      --cat-yellow: #f59e0b;
-      --cat-red: #be123c;
-      --cat-blue: #3b82f6;
-      --cat-green: #10b981;
-      --cat-purple: #c026d3;
+      --bg: #0f172a;
+      --card: #1e293b;
+      --card-border: #334155;
+      --primary: #ea580c;
+      --primary-light: #fb923c;
+      --green: #10b981;
+      --text: #f8fafc;
+      --muted: #94a3b8;
     }
 
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      user-select: none;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
       -webkit-tap-highlight-color: transparent;
+      user-select: none;
     }
 
     body {
-      background: var(--pos-bg);
-      color: var(--text-main);
+      background: var(--bg);
+      color: var(--text);
       height: 100vh;
-      overflow: hidden;
       display: flex;
       flex-direction: column;
+      overflow: hidden;
     }
 
-    /* PANTALLA INICIAL DE ACCESO */
+    /* PANTALLA ACCESO / SELECCION ROL */
     #auth-screen {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.92);
-      backdrop-filter: blur(10px);
-      z-index: 999;
+      background: var(--bg);
+      z-index: 1000;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 20px;
+      padding: 24px;
     }
     .auth-box {
-      background: #111827;
-      border: 1px solid var(--pos-border);
-      border-radius: 20px;
-      padding: 30px;
       width: 100%;
-      max-width: 380px;
+      max-width: 340px;
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 24px;
       text-align: center;
     }
-    .auth-btn-group {
+    .role-pills {
       display: flex;
-      gap: 8px;
-      margin: 20px 0 16px;
-      background: #000;
+      gap: 6px;
+      background: #090d16;
       padding: 4px;
-      border-radius: 10px;
+      border-radius: 12px;
+      margin: 16px 0;
     }
-    .auth-role-btn {
+    .role-pill-btn {
       flex: 1;
-      padding: 10px;
+      padding: 10px 4px;
       border: none;
       background: transparent;
-      color: var(--text-muted);
+      color: var(--muted);
       font-weight: 700;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       border-radius: 8px;
       cursor: pointer;
     }
-    .auth-role-btn.active {
-      background: var(--pos-blue);
+    .role-pill-btn.active {
+      background: var(--primary);
       color: #fff;
     }
-    .input-pos {
+
+    /* HEADER APP */
+    header {
+      padding: 14px 16px;
+      background: rgba(15, 23, 42, 0.95);
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      backdrop-filter: blur(10px);
+    }
+    .brand-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .badge-mesa {
+      background: #334155;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--primary-light);
+      cursor: pointer;
+    }
+
+    /* CONTENEDOR DE PANTALLAS */
+    .app-screen {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      padding-bottom: 100px;
+      display: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .app-screen.active {
+      display: block;
+    }
+
+    /* BUSCADOR Y CATEGORIAS */
+    .search-input {
       width: 100%;
-      padding: 14px;
-      background: #1f2937;
-      border: 1px solid var(--pos-border);
-      border-radius: 10px;
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: 1px solid var(--card-border);
+      background: var(--card);
       color: #fff;
-      font-size: 1rem;
+      font-size: 0.95rem;
       margin-bottom: 14px;
       outline: none;
     }
-
-    /* LAYOUT PRINCIPAL DE DOS COLUMNAS */
-    .pos-main-container {
-      flex: 1;
+    .cat-bar {
       display: flex;
-      height: calc(100vh - 54px);
-      overflow: hidden;
-    }
-
-    /* COLUMNA IZQUIERDA: MENÚ Y CATEGORÍAS */
-    .pos-left-section {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      border-right: 1px solid var(--pos-border);
-      background: #050811;
-      overflow: hidden;
-    }
-
-    /* Barra superior izquierda */
-    .pos-top-bar {
-      height: 52px;
-      padding: 0 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid var(--pos-border);
-      background: #090e18;
-    }
-    .pos-dropdown-menu {
-      font-size: 1.05rem;
-      font-weight: 800;
-      color: #fff;
-      display: flex;
-      align-items: center;
       gap: 8px;
-      cursor: pointer;
+      overflow-x: auto;
+      margin-bottom: 16px;
+      padding-bottom: 4px;
     }
-    .pos-search-actions {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-    }
-    .btn-icon-sq {
-      background: #151a24;
-      border: 1px solid var(--pos-border);
-      color: #fff;
-      width: 36px;
-      height: 36px;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-size: 0.95rem;
-    }
-
-    /* MOSAICO SUPERIOR DE CATEGORÍAS */
-    .pos-categories-mosaic {
-      display: grid;
-      grid-template-columns: 1.4fr 1.4fr 1fr 1fr;
-      grid-template-rows: repeat(2, 60px);
-      gap: 8px;
-      padding: 12px 14px;
-      background: #070b14;
-    }
-    .cat-tile {
-      border-radius: 8px;
-      padding: 10px;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-      color: #fff;
-      cursor: pointer;
+    .cat-pill {
+      flex-shrink: 0;
+      padding: 8px 16px;
+      border-radius: 20px;
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      color: var(--muted);
+      font-size: 0.82rem;
       font-weight: 700;
-      transition: transform 0.1s ease, filter 0.15s ease;
-      position: relative;
-    }
-    .cat-tile:active { transform: scale(0.97); }
-    .cat-tile .tile-title { font-size: 0.85rem; font-weight: 800; }
-    .cat-tile .tile-sub { font-size: 0.68rem; opacity: 0.8; margin-top: 2px; }
-    .cat-tile.active-cat { outline: 2.5px solid #fff; filter: brightness(1.15); }
-
-    .tile-orange { background: var(--cat-orange); }
-    .tile-yellow { background: var(--cat-yellow); color: #000; }
-    .tile-yellow .tile-sub { color: rgba(0,0,0,0.7); }
-    .tile-red { background: var(--cat-red); }
-    .tile-blue { background: var(--cat-blue); }
-    .tile-green { background: var(--cat-green); }
-    .tile-purple { background: var(--cat-purple); }
-    .tile-white { background: #f8fafc; color: #0f172a; }
-
-    /* CUADRÍCULA INFERIOR DE PRODUCTOS */
-    .pos-products-grid {
-      flex: 1;
-      padding: 12px 14px;
-      overflow-y: auto;
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-      align-content: start;
-    }
-    .product-tile {
-      background: var(--pos-card);
-      border-radius: 8px;
-      overflow: hidden;
-      aspect-ratio: 16/11;
-      position: relative;
       cursor: pointer;
-      border: 1px solid var(--pos-border);
-      transition: transform 0.1s ease;
     }
-    .product-tile:active { transform: scale(0.96); }
-    .product-tile img {
+    .cat-pill.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    /* TARJETAS DE PRODUCTOS APP */
+    .menu-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .food-card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 12px;
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    .food-img-wrap {
+      width: 84px;
+      height: 84px;
+      border-radius: 12px;
+      overflow: hidden;
+      flex-shrink: 0;
+      background: #090d16;
+    }
+    .food-img-wrap img {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      display: block;
-      filter: brightness(0.65);
     }
-    .product-tile-overlay {
-      position: absolute;
-      inset: 0;
-      padding: 8px;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-      background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 60%);
-    }
-    .prod-tile-title {
-      font-size: 0.78rem;
-      font-weight: 800;
-      color: #fff;
-      line-height: 1.15;
-      text-shadow: 0 1px 3px rgba(0,0,0,0.9);
-    }
-    .prod-tile-price {
-      font-size: 0.72rem;
-      color: #38bdf8;
-      font-weight: 700;
-      margin-top: 2px;
-    }
-
-    /* COLUMNA DERECHA: TICKET / CUENTA ACTIVA */
-    .pos-right-section {
-      width: 360px;
-      background: var(--pos-bg);
-      display: flex;
-      flex-direction: column;
-      border-left: 1px solid var(--pos-border);
-    }
-
-    .pos-ticket-header {
-      padding: 14px 18px;
-      border-bottom: 1px solid var(--pos-border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .mesa-active-badge {
-      font-size: 1.15rem;
-      font-weight: 900;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .ticket-nav-tabs {
-      display: flex;
-      padding: 10px 18px 4px;
-      gap: 20px;
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: var(--text-muted);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    }
-    .ticket-tab.active {
-      color: #fff;
-      border-bottom: 2px solid #fff;
-      padding-bottom: 6px;
-    }
-
-    /* Lista de ítems en el ticket */
-    .pos-ticket-items {
+    .food-info {
       flex: 1;
-      overflow-y: auto;
-      padding: 14px 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+      min-width: 0;
     }
-    .ticket-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 0.92rem;
-      padding-bottom: 8px;
-      border-bottom: 1px solid rgba(255,255,255,0.04);
-    }
-    .ticket-item-name {
-      font-weight: 600;
-      color: #f1f5f9;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .ticket-qty-pill {
-      background: #1e293b;
-      padding: 2px 7px;
-      border-radius: 6px;
-      font-size: 0.78rem;
+    .food-title {
+      font-size: 0.95rem;
       font-weight: 800;
-      color: var(--pos-blue);
-      cursor: pointer;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-    .ticket-item-price {
-      font-weight: 700;
-      color: #fff;
+    .food-desc {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin: 3px 0 6px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
-
-    /* Resumen inferior del ticket */
-    .pos-ticket-footer {
-      padding: 16px 18px 18px;
-      background: #090d16;
-      border-top: 1px solid var(--pos-border);
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .pos-summary-row {
+    .food-bottom {
       display: flex;
       justify-content: space-between;
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      font-weight: 600;
+      align-items: center;
     }
-    .pos-summary-row.total-row {
-      font-size: 1.15rem;
+    .food-price {
+      font-size: 1rem;
       font-weight: 900;
-      color: #fff;
-      margin-top: 4px;
-      padding-top: 8px;
-      border-top: 1px dashed var(--pos-border);
+      color: var(--green);
     }
-    .btn-pos-pay {
-      background: var(--pos-blue);
+    .btn-add {
+      background: var(--primary);
       color: #fff;
       border: none;
-      padding: 15px;
+      padding: 7px 14px;
       border-radius: 10px;
-      font-size: 1.05rem;
+      font-size: 0.82rem;
       font-weight: 800;
       cursor: pointer;
-      margin-top: 8px;
+    }
+    .btn-add:active {
+      transform: scale(0.92);
+    }
+
+    /* PANTALLA MESAS */
+    .grid-mesas {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    .mesa-box {
+      background: var(--card);
+      border: 1.5px solid var(--card-border);
+      border-radius: 16px;
+      padding: 16px;
+      min-height: 110px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      cursor: pointer;
+    }
+    .mesa-box.selected {
+      border-color: var(--primary-light);
+      box-shadow: 0 0 0 2px var(--primary);
+    }
+    .mesa-box.busy {
+      background: #271c18;
+      border-color: var(--primary);
+    }
+
+    /* BOTONES ACCIONES */
+    .btn-action-main {
+      width: 100%;
+      padding: 14px;
+      border-radius: 14px;
+      border: none;
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: #fff;
+      cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background 0.15s ease;
-    }
-    .btn-pos-pay:active { background: var(--pos-blue-hover); }
-
-    /* BARRA INFERIOR DE SISTEMA (NAVBAR) */
-    .pos-bottom-nav {
-      height: 54px;
-      background: #050811;
-      border-top: 1px solid var(--pos-border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 16px;
-      z-index: 50;
-    }
-    .bottom-nav-left, .bottom-nav-center {
-      display: flex;
-      align-items: center;
-      gap: 18px;
-    }
-    .nav-icon-link {
-      display: flex;
-      align-items: center;
       gap: 8px;
-      color: var(--text-muted);
-      font-size: 0.85rem;
+      margin-top: 10px;
+    }
+    .btn-green { background: #059669; }
+    .btn-whatsapp { background: #25d366; }
+    .btn-excel { background: #15803d; }
+    .btn-danger { background: #dc2626; }
+
+    /* BARRA FLOTANTE DE PEDIDO RÁPIDO */
+    #cart-floating-btn {
+      position: fixed;
+      bottom: 74px;
+      left: 16px;
+      right: 16px;
+      background: var(--primary);
+      color: #fff;
+      padding: 14px 18px;
+      border-radius: 16px;
+      display: none;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 10px 25px rgba(234, 88, 12, 0.4);
+      z-index: 100;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    /* BARRA DE NAVEGACIÓN INFERIOR (TAB BAR TIPO IPHONE) */
+    nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 64px;
+      background: rgba(15, 23, 42, 0.96);
+      border-top: 1px solid var(--card-border);
+      display: flex;
+      backdrop-filter: blur(12px);
+      z-index: 90;
+    }
+    .nav-btn {
+      flex: 1;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      font-size: 0.72rem;
       font-weight: 700;
       cursor: pointer;
-      padding: 6px 10px;
-      border-radius: 8px;
-      transition: background 0.15s ease, color 0.15s ease;
     }
-    .nav-icon-link.active, .nav-icon-link:active {
-      color: #fff;
-      background: #151a24;
-    }
-    .badge-count {
-      background: var(--pos-blue);
-      color: #fff;
-      font-size: 0.7rem;
-      padding: 1px 6px;
-      border-radius: 10px;
-    }
-    .role-badge-round {
-      background: #1e293b;
-      border: 1px solid var(--pos-border);
-      color: #fb923c;
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.72rem;
-      font-weight: 900;
-    }
+    .nav-btn span { font-size: 1.3rem; }
+    .nav-btn.active { color: var(--primary-light); }
 
-    /* MODAL FLOTANTE DE MESAS */
-    #mesas-modal {
+    /* TOAST AVISO */
+    #app-toast {
       position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.85);
-      z-index: 100;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-    .mesas-modal-content {
-      background: #0b1120;
-      border: 1px solid var(--pos-border);
-      border-radius: 18px;
-      padding: 24px;
-      width: 100%;
-      max-width: 600px;
-    }
-    .mesas-grid-popup {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      margin-top: 16px;
-    }
-    .mesa-card-choice {
-      background: #151a24;
-      border: 1.5px solid var(--pos-border);
-      border-radius: 12px;
-      padding: 16px 12px;
-      text-align: center;
-      cursor: pointer;
-    }
-    .mesa-card-choice.active { border-color: var(--pos-blue); background: #1e293b; }
-    .mesa-card-choice.busy { border-color: #ea580c; }
-
-    #toast-notification {
-      position: fixed;
-      top: 16px;
-      right: 16px;
-      background: #10b981;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--green);
       color: #fff;
       font-weight: 800;
-      padding: 12px 24px;
-      border-radius: 10px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-      z-index: 9999;
+      padding: 10px 20px;
+      border-radius: 30px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
       display: none;
+      z-index: 2000;
     }
   </style>
 </head>
 <body>
 
-  <div id="toast-notification"></div>
+  <div id="app-toast"></div>
 
-  <!-- MODAL DE ACCESO / PIN -->
+  <!-- PANTALLA ACCESO -->
   <div id="auth-screen">
     <div class="auth-box">
-      <div style="font-size:2.6rem; margin-bottom:6px;">🥘</div>
-      <h2 style="font-weight:900; font-size:1.3rem;">Las Delicias de Salomé</h2>
-      <p style="color:var(--text-muted); font-size:0.85rem; margin-top:4px;">Sistema POS Gastronómico</p>
+      <div style="font-size:3rem; margin-bottom:6px;">🥘</div>
+      <h2 style="font-weight:900;">Las Delicias de Salomé</h2>
+      <p style="color:var(--muted); font-size:0.85rem; margin-top:2px;">Elige tu perfil para continuar</p>
 
-      <div class="auth-btn-group">
-        <button class="auth-role-btn active" id="btn-login-cliente" onclick="setLoginRole('cliente')">Cliente</button>
-        <button class="auth-role-btn" id="btn-login-mesero" onclick="setLoginRole('mesero')">Mesero</button>
-        <button class="auth-role-btn" id="btn-login-admin" onclick="setLoginRole('admin')">Admin</button>
+      <div class="role-pills">
+        <button class="role-pill-btn active" id="btn-login-cliente" onclick="elegirRol('cliente')">👤 Cliente</button>
+        <button class="role-pill-btn" id="btn-login-mesero" onclick="elegirRol('mesero')">🍽️ Mesero</button>
+        <button class="role-pill-btn" id="btn-login-admin" onclick="elegirRol('admin')">🔑 Admin</button>
       </div>
 
-      <div id="login-sec-cliente">
-        <label style="font-size:0.75rem; color:var(--text-muted); font-weight:700; display:block; text-align:left; margin-bottom:6px;">SELECCIONA TU MESA:</label>
-        <select id="login-mesa-select" class="input-pos" style="font-weight:700;">
+      <div id="form-login-cliente">
+        <select id="login-mesa-select" class="search-input" style="font-weight:700;">
           <option value="1">Mesa 1</option>
           <option value="2">Mesa 2</option>
           <option value="3">Mesa 3</option>
@@ -495,350 +373,283 @@
           <option value="7">Mesa 7</option>
           <option value="8">Mesa 8</option>
         </select>
-        <button class="btn-pos-pay" style="width:100%;" onclick="loginCliente()">Entrar a Ordenar</button>
+        <button class="btn-action-main btn-green" onclick="ingresarCliente()">Ver Carta y Pedir</button>
       </div>
 
-      <div id="login-sec-staff" style="display:none;">
-        <label style="font-size:0.75rem; color:var(--text-muted); font-weight:700; display:block; text-align:left; margin-bottom:6px;">INGRESA TU PIN DE SEGURIDAD:</label>
-        <input type="password" id="login-pin-input" class="input-pos" placeholder="••••" maxlength="6" inputmode="numeric" style="text-align:center; font-size:1.6rem; letter-spacing:8px;">
-        <button class="btn-pos-pay" style="width:100%;" onclick="loginStaff()">Iniciar Sesión</button>
+      <div id="form-login-staff" style="display:none;">
+        <input type="password" id="login-pin-input" class="search-input" placeholder="PIN" maxlength="4" inputmode="numeric" style="text-align:center; font-size:1.6rem; letter-spacing:6px;">
+        <button class="btn-action-main btn-green" onclick="ingresarStaff()">Ingresar</button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL DE PLANO DE MESAS (DISTRIBUCIÓN) -->
-  <div id="mesas-modal">
-    <div class="mesas-modal-content">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h3 style="font-weight:900;">Plano de Distribución (Mesas)</h3>
-        <button onclick="cerrarModalMesas()" style="background:none; border:none; color:#fff; font-size:1.4rem; cursor:pointer;">✕</button>
-      </div>
-      <div class="mesas-grid-popup" id="popup-mesas-grid"></div>
+  <!-- HEADER -->
+  <header>
+    <div class="brand-title">
+      <span>🥘 Las Delicias</span>
     </div>
+    <div class="badge-mesa" id="badge-top-mesa" onclick="abrirPantalla('mesas')">
+      Mesa 1
+    </div>
+  </header>
+
+  <!-- BOTÓN FLOTANTE COMANDA -->
+  <div id="cart-floating-btn" onclick="abrirPantalla('comanda')">
+    <div id="cart-float-text">1 plato en orden</div>
+    <div id="cart-float-total">$0 ›</div>
   </div>
 
-  <!-- INTERFAZ PRINCIPAL TIPO SQUARE / TOAST -->
-  <div class="pos-main-container">
+  <!-- PANTALLA 1: MENÚ -->
+  <main class="app-screen active" id="screen-menu">
+    <input type="text" id="search-box" class="search-input" placeholder="🔍 Buscar plato o bebida..." oninput="renderizarMenu()">
+
+    <div class="cat-bar">
+      <button class="cat-pill active" onclick="cambiarCat('todos')">🔥 Todos</button>
+      <button class="cat-pill" onclick="cambiarCat('desayunos')">🍳 Desayunos</button>
+      <button class="cat-pill" onclick="cambiarCat('bebidas')">☕ Bebidas</button>
+    </div>
+
+    <div class="menu-container" id="menu-items-list"></div>
+  </main>
+
+  <!-- PANTALLA 2: MESAS -->
+  <main class="app-screen" id="screen-mesas">
+    <div style="font-size:0.8rem; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:12px;">
+      Selecciona una mesa
+    </div>
+    <div class="grid-mesas" id="mesas-grid-container"></div>
+  </main>
+
+  <!-- PANTALLA 3: COMANDA / CUENTA -->
+  <main class="app-screen" id="screen-comanda">
+    <h2 id="comanda-title" style="font-weight:900; margin-bottom:14px;">Mesa 1</h2>
     
-    <!-- COLUMNA IZQUIERDA: CATÁLOGO Y PRODUCTOS -->
-    <section class="pos-left-section">
+    <div id="comanda-items-list" style="margin-bottom:16px;"></div>
+
+    <div style="background:var(--card); border:1px solid var(--card-border); border-radius:16px; padding:16px;">
+      <div style="display:flex; justify-content:space-between; font-size:1.2rem; font-weight:900; margin-bottom:14px;">
+        <span>TOTAL:</span>
+        <span id="comanda-total-val" style="color:var(--green);">$0</span>
+      </div>
       
-      <!-- Barra superior izquierda -->
-      <div class="pos-top-bar">
-        <div class="pos-dropdown-menu">
-          <span>Menú Completo</span>
-          <span style="font-size:0.7rem; opacity:0.6;">▼</span>
-        </div>
-        <div class="pos-search-actions">
-          <button class="btn-icon-sq" onclick="buscarPlatoPrompt()">🔍</button>
-          <button class="btn-icon-sq" onclick="reiniciarFiltro()">🏷️</button>
-        </div>
-      </div>
+      <button class="btn-action-main btn-green" id="btn-cobrar-orden" onclick="cobrarOrdenActual()">
+        💵 Cobrar y Liberar Mesa
+      </button>
+    </div>
+  </main>
 
-      <!-- Mosaico superior de Categorías de Acceso Rápido -->
-      <div class="pos-categories-mosaic">
-        <div class="cat-tile tile-orange active-cat" id="cat-todos" onclick="filtrarCategoria('todos')">
-          <div class="tile-title">Todos</div>
-          <div class="tile-sub">11 platos</div>
-        </div>
-        <div class="cat-tile tile-yellow" id="cat-desayunos" onclick="filtrarCategoria('desayunos')">
-          <div class="tile-title">Desayunos</div>
-          <div class="tile-sub">9 platos</div>
-        </div>
-        <div class="cat-tile tile-red" id="cat-caldos" onclick="filtrarCategoria('caldos')">
-          <div class="tile-title">Caldos</div>
-          <div class="tile-sub">Tradicional</div>
-        </div>
-        <div class="cat-tile tile-green" onclick="aplicarDescuentoRapido()">
-          <div class="tile-title">% Descuentos</div>
-          <div class="tile-sub">Promo</div>
-        </div>
-        <div class="cat-tile tile-blue" id="cat-bebidas" onclick="filtrarCategoria('bebidas')">
-          <div class="tile-title">Bebidas</div>
-          <div class="tile-sub">2 artículos</div>
-        </div>
-        <div class="cat-tile tile-white" onclick="abrirEscanear()">
-          <div class="tile-title">⌘ Escanear</div>
-          <div class="tile-sub">Código</div>
-        </div>
-        <div class="cat-tile tile-purple" id="cat-especiales" onclick="filtrarCategoria('especiales')">
-          <div class="tile-title">Especiales</div>
-          <div class="tile-sub">Moñonas</div>
-        </div>
-      </div>
-
-      <!-- Cuadrícula de Platos (Mosaico de 4x) -->
-      <div class="pos-products-grid" id="pos-grid-container"></div>
-    </section>
-
-    <!-- COLUMNA DERECHA: TICKET / COMANDA EN TIEMPO REAL -->
-    <section class="pos-right-section">
-      
-      <!-- Cabecera del ticket -->
-      <div class="pos-ticket-header">
-        <div class="mesa-active-badge">
-          <span id="ticket-mesa-nombre">Mesa 1</span>
-        </div>
-        <button class="btn-icon-sq" onclick="abrirModalMesas()" title="Cambiar Mesa">🪑</button>
-      </div>
-
-      <!-- Pestañas superiores del ticket -->
-      <div class="ticket-nav-tabs">
-        <div class="ticket-tab active">Cuenta</div>
-        <div class="ticket-tab" onclick="accionRapidaDividir()">Acciones</div>
-        <div class="ticket-tab" onclick="accionClienteNota()">Cliente</div>
-      </div>
-
-      <!-- Listado de ítems cobrados -->
-      <div class="pos-ticket-items" id="ticket-items-list"></div>
-
-      <!-- Subtotal, Impuestos y Botón Pagar -->
-      <div class="pos-ticket-footer">
-        <div class="pos-summary-row">
-          <span>Subtotal</span>
-          <span id="txt-subtotal">$0</span>
-        </div>
-        <div class="pos-summary-row">
-          <span>Impoconsumo (0%)</span>
-          <span id="txt-impuesto">$0</span>
-        </div>
-        <div class="pos-summary-row total-row">
-          <span>Total</span>
-          <span id="txt-total">$0</span>
-        </div>
-        <button class="btn-pos-pay" id="btn-cobrar-principal" onclick="cobrarTicketActivo()">
-          Pagar
-        </button>
-      </div>
-    </section>
-  </div>
-
-  <!-- BARRA INFERIOR DE NAVEGACIÓN PROFESIONAL -->
-  <footer class="pos-bottom-nav">
-    <div class="bottom-nav-left">
-      <div class="nav-icon-link" onclick="cerrarSesionApp()">
-        <span class="role-badge-round" id="badge-user-initials">AC</span>
-        <span>Cerrar sesión</span>
-      </div>
-      <div class="nav-icon-link" onclick="abrirModalMesas()">
-        <span>⚅</span>
-        <span>Plano de distribución</span>
-      </div>
-      <div class="nav-icon-link active">
-        <span>🧾</span>
-        <span>Pedidos</span>
-        <span class="badge-count" id="badge-total-items-orden">0</span>
-      </div>
-      <div class="nav-icon-link" onclick="descargarExcelDiario()">
-        <span>⇆</span>
-        <span>Transacciones (Excel)</span>
-      </div>
+  <!-- PANTALLA 4: CIERRE / ADMIN -->
+  <main class="app-screen" id="screen-cierre">
+    <div style="font-size:0.8rem; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:12px;">
+      Arqueo de Caja del Día
     </div>
 
-    <div class="bottom-nav-center">
-      <div class="nav-icon-link" onclick="menuMasOpciones()">
-        <span>☰</span>
-        <span>Más</span>
-      </div>
+    <div style="background:var(--card); border:1px solid var(--card-border); border-radius:16px; padding:16px; margin-bottom:14px;">
+      <div style="font-size:0.75rem; color:var(--muted); font-weight:700;">TOTAL COBRADO HOY</div>
+      <div id="kpi-total-caja" style="font-size:1.8rem; font-weight:900; color:var(--green); margin:4px 0 8px;">$0</div>
+      <div style="font-size:0.85rem; color:var(--muted);" id="kpi-total-cuentas">0 pedidos cobrados</div>
     </div>
-  </footer>
+
+    <div style="background:var(--card); border:1px solid var(--card-border); border-radius:16px; padding:16px; margin-bottom:14px;">
+      <label style="font-size:0.75rem; color:var(--muted); font-weight:700; display:block; margin-bottom:6px;">NÚMERO DE WHATSAPP (CON CÓDIGO PAÍS):</label>
+      <input type="tel" id="ws-phone-input" class="search-input" placeholder="Ej: 573001234567" style="margin-bottom:0;">
+    </div>
+
+    <button class="btn-action-main btn-whatsapp" onclick="enviarWhatsappCierre()">
+      📲 Enviar Resumen al WhatsApp
+    </button>
+
+    <button class="btn-action-main btn-excel" onclick="descargarExcelCierre()">
+      📊 Descargar Ventas en Excel (.xlsx)
+    </button>
+
+    <button class="btn-action-main btn-danger" onclick="reiniciarCaja()" style="margin-top:20px;">
+      🗑️ Reiniciar Caja a $0
+    </button>
+  </main>
+
+  <!-- TAB BAR INFERIOR -->
+  <nav id="bottom-bar">
+    <button class="nav-btn active" id="tab-btn-menu" onclick="abrirPantalla('menu')">
+      <span>📋</span>Carta
+    </button>
+    <button class="nav-btn" id="tab-btn-mesas" onclick="abrirPantalla('mesas')">
+      <span>🪑</span>Mesas
+    </button>
+    <button class="nav-btn" id="tab-btn-comanda" onclick="abrirPantalla('comanda')">
+      <span>🧾</span>Comanda
+    </button>
+    <button class="nav-btn" id="tab-btn-cierre" onclick="abrirPantalla('cierre')">
+      <span>📊</span>Cierre
+    </button>
+    <button class="nav-btn" onclick="cerrarSesion()">
+      <span>🚪</span>Salir
+    </button>
+  </nav>
 
   <script>
     const PIN_MESERO = "1234";
     const PIN_ADMIN = "9999";
 
     let usuarioActual = { rol: null, mesaId: 1 };
-    let rolSeleccionadoModal = 'cliente';
-    let currentCategoria = 'todos';
-    let activeMesa = 1;
+    let rolModal = 'cliente';
+    let categoriaActual = 'todos';
+    let mesaActiva = 1;
 
-    // Persistencia de mesas
     let mesas = JSON.parse(localStorage.getItem("salome_mesas") || "null") || 
                 Array.from({ length: 8 }, (_, i) => ({ id: i + 1, items: [] }));
 
     const fmt = (v) => '$' + Number(v || 0).toLocaleString('es-CO');
 
-    function notify(txt) {
-      const t = document.getElementById('toast-notification');
-      t.innerText = txt;
+    function toast(msg) {
+      const t = document.getElementById('app-toast');
+      t.innerText = msg;
       t.style.display = 'block';
-      setTimeout(() => { t.style.display = 'none'; }, 1800);
+      setTimeout(() => { t.style.display = 'none'; }, 1500);
     }
 
-    // CATÁLOGO DE PRODUCTOS VINCULADOS A TUS FOTOS REALES
-    const MENU_ITEMS = [
-      { 
-        id: 1, 
-        name: "Arroz con Huevo Frito", 
-        price: 9000, 
-        cat: "desayunos", 
-        img: "./imagenes/arroz_huevo.jpg" 
-      },
-      { 
-        id: 2, 
-        name: "Desayuno Salomé Completo", 
-        price: 15000, 
-        cat: "desayunos", 
-        img: "./imagenes/huevos_completos.jpg" 
-      },
-      { 
-        id: 3, 
-        name: "Huevos Jamón Cazuela", 
-        price: 12000, 
-        cat: "desayunos", 
-        img: "./imagenes/huevos_cazuela.jpg" 
-      },
-      { 
-        id: 4, 
-        name: "Huevos Rancheros Tabla", 
-        price: 13000, 
-        cat: "desayunos", 
-        img: "./imagenes/huevos_madera.jpg" 
-      },
-      { 
-        id: 5, 
-        name: "Tamal Tradicional", 
-        price: 16000, 
-        cat: "desayunos", 
-        img: "./imagenes/tamal.jpg" 
-      },
-      { 
-        id: 6, 
-        name: "Caldo de Costilla Casero", 
-        price: 14000, 
-        cat: "caldos", 
-        img: "./imagenes/caldo_costilla.jpg" 
-      },
-      { 
-        id: 7, 
-        name: "Calentado Paisa Especial", 
-        price: 16000, 
-        cat: "desayunos", 
-        img: "./imagenes/calentado_paisa.jpg" 
-      },
-      { 
-        id: 8, 
-        name: "Moñona Salomé Especial", 
-        price: 22000, 
-        cat: "especiales", 
-        img: "./imagenes/monona.jpg" 
-      },
-      { 
-        id: 9, 
-        name: "Plato de Frutas Frescas", 
-        price: 8000, 
-        cat: "desayunos", 
-        img: "./imagenes/frutas.jpg" 
-      },
-      { 
-        id: 10, 
-        name: "Chocolate con Queso", 
-        price: 7000, 
-        cat: "bebidas", 
-        img: "./imagenes/chocolate.jpg" 
-      },
-      { 
-        id: 11, 
-        name: "Café Tinto Campesino", 
-        price: 3500, 
-        cat: "bebidas", 
-        img: "./imagenes/cafe.jpg" 
-      }
+    // CATÁLOGO COMPLETO CON TUS FOTOS REALES
+    const PRODUCTOS = [
+      { id: 1, name: "Arroz con Huevo Frito", price: 9000, cat: "desayunos", desc: "Arroz blanco con huevo frito de yema tierna", img: "./imagenes/arroz_huevo.jpg" },
+      { id: 2, name: "Desayuno Salomé Completo", price: 15000, cat: "desayunos", desc: "Huevos revueltos, salchicha, arepa, pandebono, queso y chocolate", img: "./imagenes/huevos_completos.jpg" },
+      { id: 3, name: "Huevos con Jamón en Cazuela", price: 12000, cat: "desayunos", desc: "Huevos suaves con jamón en sartén caliente y jugo", img: "./imagenes/huevos_cazuela.jpg" },
+      { id: 4, name: "Huevos Rancheros en Tabla", price: 13000, cat: "desayunos", desc: "Huevos revueltos con salchicha, pan tostado y arepa", img: "./imagenes/huevos_madera.jpg" },
+      { id: 5, name: "Tamal Tradicional con Chocolate", price: 16000, cat: "desayunos", desc: "Tamal en hoja de plátano con pan campesino y chocolate", img: "./imagenes/tamal.jpg" },
+      { id: 6, name: "Caldo de Costilla Casero", price: 14000, cat: "desayunos", desc: "Costilla de res en caldo criollo con papa pastusa y cilantro", img: "./imagenes/caldo_costilla.jpg" },
+      { id: 7, name: "Calentado Paisa Especial", price: 16000, cat: "desayunos", desc: "Fríjoles con arroz, huevo montado y pan campesino", img: "./imagenes/calentado_paisa.jpg" },
+      { id: 8, name: "Moñona Salomé Especial", price: 22000, cat: "desayunos", desc: "Arroz, carne en hogao, pechuga, huevos fritos y patacón", img: "./imagenes/monona.jpg" },
+      { id: 9, name: "Plato de Frutas Frescas", price: 8000, cat: "desayunos", desc: "Sandía, melón, papaya, piña dulce y fresa", img: "./imagenes/frutas.jpg" },
+      { id: 10, name: "Chocolate con Queso", price: 7000, cat: "bebidas", desc: "Chocolate caliente espumoso con queso y almojábana", img: "./imagenes/chocolate.jpg" },
+      { id: 11, name: "Café Tinto Campesino", price: 3500, cat: "bebidas", desc: "Café recién colado con aroma tradicional", img: "./imagenes/cafe.jpg" }
     ];
 
-    /* GESTIÓN DE ROLES */
-    function setLoginRole(r) {
-      rolSeleccionadoModal = r;
-      document.querySelectorAll('.auth-role-btn').forEach(b => b.classList.remove('active'));
+    /* ROLES Y LOGIN */
+    function elegirRol(r) {
+      rolModal = r;
+      document.querySelectorAll('.role-pill-btn').forEach(b => b.classList.remove('active'));
       document.getElementById(`btn-login-${r}`).classList.add('active');
 
       if (r === 'cliente') {
-        document.getElementById('login-sec-cliente').style.display = 'block';
-        document.getElementById('login-sec-staff').style.display = 'none';
+        document.getElementById('form-login-cliente').style.display = 'block';
+        document.getElementById('form-login-staff').style.display = 'none';
       } else {
-        document.getElementById('login-sec-cliente').style.display = 'none';
-        document.getElementById('login-sec-staff').style.display = 'block';
+        document.getElementById('form-login-cliente').style.display = 'none';
+        document.getElementById('form-login-staff').style.display = 'block';
         document.getElementById('login-pin-input').value = '';
       }
     }
 
-    function loginCliente() {
-      const mesa = Number(document.getElementById('login-mesa-select').value);
-      usuarioActual = { rol: 'cliente', mesaId: mesa };
-      activeMesa = mesa;
-      configurarPermisos();
+    function ingresarCliente() {
+      const m = Number(document.getElementById('login-mesa-select').value);
+      usuarioActual = { rol: 'cliente', mesaId: m };
+      mesaActiva = m;
+      document.getElementById('badge-top-mesa').innerText = `Mesa ${m}`;
+      aplicarPermisos();
       document.getElementById('auth-screen').style.display = 'none';
-      actualizarTicket();
-      notify(`Bienvenido a la Mesa ${mesa}`);
+      abrirPantalla('menu');
+      toast(`¡Bienvenido a la Mesa ${m}!`);
     }
 
-    function loginStaff() {
+    function ingresarStaff() {
       const pin = document.getElementById('login-pin-input').value.trim();
-      if (rolSeleccionadoModal === 'mesero' && (pin === PIN_MESERO || pin === PIN_ADMIN)) {
+      if (rolModal === 'mesero' && (pin === PIN_MESERO || pin === PIN_ADMIN)) {
         usuarioActual = { rol: 'mesero', mesaId: 1 };
-      } else if (rolSeleccionadoModal === 'admin' && pin === PIN_ADMIN) {
+      } else if (rolModal === 'admin' && pin === PIN_ADMIN) {
         usuarioActual = { rol: 'admin', mesaId: 1 };
       } else {
-        return alert('PIN de acceso incorrecto.');
+        return alert('PIN incorrecto.');
       }
-      configurarPermisos();
+      aplicarPermisos();
       document.getElementById('auth-screen').style.display = 'none';
-      actualizarTicket();
+      abrirPantalla('mesas');
     }
 
-    function cerrarSesionApp() {
+    function cerrarSesion() {
       document.getElementById('auth-screen').style.display = 'flex';
     }
 
-    function configurarPermisos() {
-      document.getElementById('badge-user-initials').innerText = usuarioActual.rol === 'admin' ? 'AD' : (usuarioActual.rol === 'mesero' ? 'ME' : 'CL');
-      const btnPagar = document.getElementById('btn-cobrar-principal');
+    function aplicarPermisos() {
+      const btnCierre = document.getElementById('tab-btn-cierre');
+      const btnCobrar = document.getElementById('btn-cobrar-orden');
+
       if (usuarioActual.rol === 'cliente') {
-        btnPagar.innerText = 'Enviar Pedido a Cocina';
-      } else {
-        btnPagar.innerText = 'Pagar';
+        btnCierre.style.display = 'none';
+        btnCobrar.innerText = 'Enviar Pedido a Cocina';
+      } else if (usuarioActual.rol === 'mesero') {
+        btnCierre.style.display = 'none';
+        btnCobrar.innerText = 'Cobrar y Liberar Mesa';
+      } else if (usuarioActual.rol === 'admin') {
+        btnCierre.style.display = 'flex';
+        btnCobrar.innerText = 'Cobrar y Liberar Mesa';
+        document.getElementById('ws-phone-input').value = localStorage.getItem("salome_ws_phone") || "";
       }
     }
 
-    /* RENDER DE LA CUADRÍCULA DE PRODUCTOS */
-    function renderProductGrid(items) {
-      const cont = document.getElementById('pos-grid-container');
-      cont.innerHTML = '';
+    /* PANTALLAS */
+    function abrirPantalla(screenName) {
+      document.querySelectorAll('.app-screen').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+      const target = document.getElementById(`screen-${screenName}`);
+      if (target) target.classList.add('active');
+
+      const navBtn = document.getElementById(`tab-btn-${screenName}`);
+      if (navBtn) navBtn.classList.add('active');
+
+      if (screenName === 'comanda') renderizarComanda();
+      if (screenName === 'mesas') renderizarMesas();
+      if (screenName === 'cierre') renderizarCierre();
+
+      actualizarBurbujaFlotante();
+    }
+
+    /* MENÚ Y PRODUCTOS */
+    function cambiarCat(cat) {
+      categoriaActual = cat;
+      document.querySelectorAll('.cat-pill').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+      renderizarMenu();
+    }
+
+    function renderizarMenu() {
+      const container = document.getElementById('menu-items-list');
+      container.innerHTML = '';
+
+      const search = (document.getElementById('search-box')?.value || '').toLowerCase().trim();
+
+      let items = categoriaActual === 'todos' 
+        ? PRODUCTOS 
+        : PRODUCTOS.filter(p => p.cat === categoriaActual);
+
+      if (search) {
+        items = items.filter(p => p.name.toLowerCase().includes(search));
+      }
 
       items.forEach(p => {
-        const tile = document.createElement('div');
-        tile.className = 'product-tile';
-        tile.onclick = () => agregarItemMesa(p.id);
-        tile.innerHTML = `
-          <img src="${p.img}" alt="${p.name}" loading="lazy">
-          <div class="product-tile-overlay">
-            <div class="prod-tile-title">${p.name}</div>
-            <div class="prod-tile-price">${fmt(p.price)}</div>
+        const card = document.createElement('div');
+        card.className = 'food-card';
+        card.innerHTML = `
+          <div class="food-img-wrap">
+            <img src="${p.img}" alt="${p.name}" loading="lazy">
+          </div>
+          <div class="food-info">
+            <div class="food-title">${p.name}</div>
+            <div class="food-desc">${p.desc}</div>
+            <div class="food-bottom">
+              <span class="food-price">${fmt(p.price)}</span>
+              <button class="btn-add" onclick="pedirPlato(${p.id})">+ Agregar</button>
+            </div>
           </div>
         `;
-        cont.appendChild(tile);
+        container.appendChild(card);
       });
     }
 
-    function filtrarCategoria(cat) {
-      currentCategoria = cat;
-      document.querySelectorAll('.cat-tile').forEach(t => t.classList.remove('active-cat'));
-      const activeEl = document.getElementById(`cat-${cat}`);
-      if (activeEl) activeEl.classList.add('active-cat');
-
-      if (cat === 'todos') {
-        renderProductGrid(MENU_ITEMS);
-      } else {
-        renderProductGrid(MENU_ITEMS.filter(x => x.cat === cat));
-      }
-    }
-
-    /* AGREGAR ÍTEM AL TICKET */
-    function agregarItemMesa(id) {
-      const prod = MENU_ITEMS.find(x => x.id === id);
+    function pedirPlato(id) {
+      const prod = PRODUCTOS.find(x => x.id === id);
       if (!prod) return;
 
-      let m = mesas.find(x => x.id === activeMesa);
+      let m = mesas.find(x => x.id === mesaActiva);
       const existe = m.items.find(i => i.name === prod.name);
 
       if (existe) {
@@ -847,46 +658,111 @@
         m.items.push({ name: prod.name, price: prod.price, qty: 1 });
       }
 
-      guardarPersistencia();
-      actualizarTicket();
-      notify(`+1 ${prod.name}`);
+      localStorage.setItem("salome_mesas", JSON.stringify(mesas));
+      actualizarBurbujaFlotante();
+      toast(`+1 ${prod.name}`);
     }
 
-    /* ACTUALIZAR COLUMNA DEL TICKET */
-    function actualizarTicket() {
-      const m = mesas.find(x => x.id === activeMesa);
-      document.getElementById('ticket-mesa-nombre').innerText = `Mesa ${activeMesa}`;
+    /* BURBUJA FLOTANTE */
+    function actualizarBurbujaFlotante() {
+      const btn = document.getElementById('cart-floating-btn');
+      const m = mesas.find(x => x.id === mesaActiva);
 
-      const cont = document.getElementById('ticket-items-list');
-      cont.innerHTML = '';
+      if (!m || m.items.length === 0 || document.getElementById('screen-comanda').classList.contains('active')) {
+        btn.style.display = 'none';
+        return;
+      }
+
+      const totalQty = m.items.reduce((a, b) => a + b.qty, 0);
+      const totalDinero = m.items.reduce((a, b) => a + (b.price * b.qty), 0);
+
+      document.getElementById('cart-float-text').innerText = `${totalQty} ${totalQty === 1 ? 'plato' : 'platos'} en Mesa ${mesaActiva}`;
+      document.getElementById('cart-float-total').innerText = `${fmt(totalDinero)} ›`;
+      btn.style.display = 'flex';
+    }
+
+    /* MESAS */
+    function renderizarMesas() {
+      const grid = document.getElementById('mesas-grid-container');
+      grid.innerHTML = '';
+
+      mesas.forEach(m => {
+        const isBusy = m.items.length > 0;
+        const total = m.items.reduce((a, b) => a + (b.price * b.qty), 0);
+
+        const box = document.createElement('div');
+        box.className = `mesa-box ${m.id === mesaActiva ? 'selected' : ''} ${isBusy ? 'busy' : ''}`;
+        box.onclick = () => {
+          mesaActiva = m.id;
+          document.getElementById('badge-top-mesa').innerText = `Mesa ${m.id}`;
+          renderizarMesas();
+          if (usuarioActual.rol === 'admin' || usuarioActual.rol === 'mesero') {
+            abrirPantalla('comanda');
+          } else {
+            abrirPantalla('menu');
+          }
+        };
+
+        box.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-weight:900; font-size:1.1rem;">Mesa ${m.id}</span>
+            <span style="font-size:0.7rem; font-weight:800; color:${isBusy ? '#fb923c' : '#34d399'};">
+              ${isBusy ? 'OCUPADA' : 'LIBRE'}
+            </span>
+          </div>
+          <div style="font-size:1.2rem; font-weight:900; color:#fff;">
+            ${isBusy ? fmt(total) : '-'}
+          </div>
+        `;
+        grid.appendChild(box);
+      });
+    }
+
+    /* COMANDA */
+    function renderizarComanda() {
+      const m = mesas.find(x => x.id === mesaActiva);
+      document.getElementById('comanda-title').innerText = `Mesa ${mesaActiva}`;
+      const list = document.getElementById('comanda-items-list');
+      list.innerHTML = '';
 
       let subtotal = 0;
-      let totalQty = 0;
 
-      m.items.forEach(item => {
-        const itemTot = item.price * item.qty;
-        subtotal += itemTot;
-        totalQty += item.qty;
+      if (m.items.length === 0) {
+        list.innerHTML = `<div style="text-align:center; color:var(--muted); padding:30px 0;">No hay consumos en esta mesa.</div>`;
+        document.getElementById('comanda-total-val').innerText = '$0';
+        return;
+      }
+
+      m.items.forEach(it => {
+        const tot = it.price * it.qty;
+        subtotal += tot;
 
         const row = document.createElement('div');
-        row.className = 'ticket-row';
+        row.style.display = 'flex';
+        row.style.justifyContent = 'space-between';
+        row.style.alignItems = 'center';
+        row.style.padding = '12px 0';
+        row.style.borderBottom = '1px solid var(--card-border)';
+
         row.innerHTML = `
-          <div class="ticket-item-name">
-            <span class="ticket-qty-pill" onclick="modificarCantidadItem('${item.name}', -1)">${item.qty}x</span>
-            <span>${item.name}</span>
+          <div>
+            <div style="font-weight:800; font-size:0.95rem;">${it.name}</div>
+            <div style="font-size:0.8rem; color:var(--muted);">${fmt(it.price)}</div>
           </div>
-          <div class="ticket-item-price">${fmt(itemTot)}</div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <button onclick="cambiarCantidad('${it.name}', -1)" style="width:32px; height:32px; border-radius:8px; border:1px solid var(--card-border); background:#0f172a; color:#fff; font-weight:900; font-size:1.1rem;">-</button>
+            <span style="font-weight:900; min-width:16px; text-align:center;">${it.qty}</span>
+            <button onclick="cambiarCantidad('${it.name}', 1)" style="width:32px; height:32px; border-radius:8px; border:1px solid var(--card-border); background:#0f172a; color:#fff; font-weight:900; font-size:1.1rem;">+</button>
+          </div>
         `;
-        cont.appendChild(row);
+        list.appendChild(row);
       });
 
-      document.getElementById('txt-subtotal').innerText = fmt(subtotal);
-      document.getElementById('txt-total').innerText = fmt(subtotal);
-      document.getElementById('badge-total-items-orden').innerText = totalQty;
+      document.getElementById('comanda-total-val').innerText = fmt(subtotal);
     }
 
-    function modificarCantidadItem(name, delta) {
-      let m = mesas.find(x => x.id === activeMesa);
+    function cambiarCantidad(name, delta) {
+      let m = mesas.find(x => x.id === mesaActiva);
       const it = m.items.find(i => i.name === name);
       if (!it) return;
 
@@ -894,182 +770,115 @@
       if (it.qty <= 0) {
         m.items = m.items.filter(i => i.name !== name);
       }
-      guardarPersistencia();
-      actualizarTicket();
+
+      localStorage.setItem("salome_mesas", JSON.stringify(mesas));
+      renderizarComanda();
+      actualizarBurbujaFlotante();
     }
 
-    /* COBRAR O PROCESAR */
-    function cobrarTicketActivo() {
-      let m = mesas.find(x => x.id === activeMesa);
-      if (m.items.length === 0) return alert('La cuenta está vacía.');
+    function cobrarOrdenActual() {
+      let m = mesas.find(x => x.id === mesaActiva);
+      if (m.items.length === 0) return alert('La mesa no tiene consumos.');
 
       if (usuarioActual.rol === 'cliente') {
-        alert(`¡Pedido de la Mesa ${activeMesa} enviado a cocina con éxito!`);
+        alert(`¡Pedido de la Mesa ${mesaActiva} enviado a cocina!`);
         return;
       }
 
-      // Proceso de cobro de Mesero / Admin
-      const tot = m.items.reduce((a, b) => a + (b.price * b.qty), 0);
-      let ventas = JSON.parse(localStorage.getItem("salome_ventas") || "[]");
+      const total = m.items.reduce((a, b) => a + (b.price * b.qty), 0);
       const ahora = new Date();
 
+      let ventas = JSON.parse(localStorage.getItem("salome_ventas") || "[]");
       ventas.push({
         id: ventas.length + 1,
-        mesa: activeMesa,
+        mesa: mesaActiva,
         items: m.items.map(i => `${i.qty}x ${i.name}`).join(', '),
-        total: tot,
+        total: total,
         fecha: ahora.toLocaleDateString(),
         hora: ahora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       });
 
       localStorage.setItem("salome_ventas", JSON.stringify(ventas));
       m.items = [];
-      guardarPersistencia();
-      actualizarTicket();
-      notify(`Mesa ${activeMesa} cobrada por ${fmt(tot)}`);
+      localStorage.setItem("salome_mesas", JSON.stringify(mesas));
+
+      renderizarComanda();
+      actualizarBurbujaFlotante();
+      toast(`Mesa ${mesaActiva} cobrada por ${fmt(total)}`);
     }
 
-    /* PLANO DE DISTRIBUCIÓN MODAL */
-    function abrirModalMesas() {
-      const pop = document.getElementById('popup-mesas-grid');
-      pop.innerHTML = '';
+    /* CIERRE Y ARQUEO */
+    function renderizarCierre() {
+      let ventas = JSON.parse(localStorage.getItem("salome_ventas") || "[]");
+      const cobrado = ventas.reduce((a, b) => a + Number(b.total), 0);
+      document.getElementById('kpi-total-caja').innerText = fmt(cobrado);
+      document.getElementById('kpi-total-cuentas').innerText = `${ventas.length} pedidos cobrados hoy`;
+    }
 
-      mesas.forEach(m => {
-        const isBusy = m.items.length > 0;
-        const tot = m.items.reduce((a, b) => a + (b.price * b.qty), 0);
+    function enviarWhatsappCierre() {
+      let ventas = JSON.parse(localStorage.getItem("salome_ventas") || "[]");
+      if (ventas.length === 0) return alert('No hay ventas hoy.');
 
-        const card = document.createElement('div');
-        card.className = `mesa-card-choice ${m.id === activeMesa ? 'active' : ''} ${isBusy ? 'busy' : ''}`;
-        card.onclick = () => {
-          activeMesa = m.id;
-          cerrarModalMesas();
-          actualizarTicket();
-        };
-        card.innerHTML = `
-          <div style="font-weight:900; font-size:1.1rem;">Mesa ${m.id}</div>
-          <div style="font-size:0.75rem; margin-top:4px; color:${isBusy ? '#fb923c' : '#34d399'};">
-            ${isBusy ? fmt(tot) : 'Libre'}
-          </div>
-        `;
-        pop.appendChild(card);
+      const phone = document.getElementById('ws-phone-input').value.trim();
+      if (!phone) return alert('Ingresa tu número de WhatsApp con código de país (ej: 573001234567).');
+
+      localStorage.setItem("salome_ws_phone", phone);
+      const total = ventas.reduce((a, b) => a + Number(b.total), 0);
+
+      let msg = `*🥘 BALANCE DIARIO - LAS DELICIAS DE SALOMÉ*\n`;
+      msg += `📅 Fecha: ${new Date().toLocaleDateString()}\n`;
+      msg += `🧾 Pedidos cobrados: ${ventas.length}\n`;
+      msg += `💵 TOTAL EN CAJA: ${fmt(total)}\n`;
+      msg += `------------------------------------\n`;
+      ventas.forEach(v => {
+        msg += `• Orden #${v.id} (Mesa ${v.mesa}): ${fmt(v.total)} - ${v.hora}\n`;
       });
 
-      document.getElementById('mesas-modal').style.display = 'flex';
+      window.open(`https://api.whatsapp.com/send?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(msg)}`, '_blank');
     }
 
-    function cerrarModalMesas() {
-      document.getElementById('mesas-modal').style.display = 'none';
-    }
-
-    /* EXPORTACIÓN EXCEL (.XLSX) PARA ADMINISTRADOR */
-    function descargarExcelDiario() {
-      if (usuarioActual.rol !== 'admin') {
-        return alert('Acceso restringido: Esta función es exclusiva para el Administrador.');
-      }
-
+    function descargarExcelCierre() {
       let ventas = JSON.parse(localStorage.getItem("salome_ventas") || "[]");
-      if (ventas.length === 0) return alert('No hay ventas registradas el día de hoy.');
+      if (ventas.length === 0) return alert('No hay ventas registradas.');
 
-      const datosExcel = ventas.map(v => ({
+      const rows = ventas.map(v => ({
         "Nº Orden": v.id,
         "Fecha": v.fecha,
         "Hora": v.hora,
         "Mesa": `Mesa ${v.mesa}`,
-        "Platos Consumidos": v.items,
-        "Total Pagado ($)": Number(v.total)
+        "Platos": v.items,
+        "Total ($)": Number(v.total)
       }));
 
-      const sumaTotal = ventas.reduce((a, b) => a + Number(b.total), 0);
-      datosExcel.push({
+      const total = ventas.reduce((a, b) => a + Number(b.total), 0);
+      rows.push({
         "Nº Orden": "TOTAL",
         "Fecha": "",
         "Hora": "",
         "Mesa": "",
-        "Platos Consumidos": "CIERRE DE CAJA DEL DÍA",
-        "Total Pagado ($)": sumaTotal
+        "Platos": "CIERRE TOTAL DEL DÍA",
+        "Total ($)": total
       });
 
-      const ws = XLSX.utils.json_to_sheet(datosExcel);
-      ws['!cols'] = [{ wch: 10 }, { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 45 }, { wch: 18 }];
+      const ws = XLSX.utils.json_to_sheet(rows);
+      ws['!cols'] = [{ wch: 10 }, { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 45 }, { wch: 16 }];
 
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Ventas_POS");
-      XLSX.writeFile(wb, `Ventas_Salome_${new Date().toISOString().slice(0,10)}.xlsx`);
+      XLSX.utils.book_append_sheet(wb, ws, "Ventas_Diarias");
+      XLSX.writeFile(wb, `Ventas_${new Date().toISOString().slice(0, 10)}.xlsx`);
     }
 
-    /* MENÚ MÁS (WHATSAPP Y ARQUEO ADMIN) */
-    function menuMasOpciones() {
-      if (usuarioActual.rol !== 'admin') {
-        return alert('Opciones de Administrador. Inicia sesión con el PIN de Admin.');
-      }
-
-      let ventas = JSON.parse(localStorage.getItem("salome_ventas") || "[]");
-      const totalVendido = ventas.reduce((a, b) => a + Number(b.total), 0);
-
-      const op = prompt(
-        `PANEL ADMINISTRADOR:\n` +
-        `1. Enviar Cierre a WhatsApp\n` +
-        `2. Reiniciar Caja a $0\n` +
-        `Total en caja hoy: ${fmt(totalVendido)}\n\n` +
-        `Escribe el número de la opción (1 o 2):`
-      );
-
-      if (op === '1') {
-        if (ventas.length === 0) return alert('No hay ventas hoy.');
-        let phone = localStorage.getItem("salome_ws_phone") || prompt("Número de WhatsApp con código de país (ej: 573001234567):");
-        if (!phone) return;
-        localStorage.setItem("salome_ws_phone", phone);
-
-        let msg = `*🥘 CIERRE DE CAJA - LAS DELICIAS DE SALOMÉ*\n`;
-        msg += `📅 Fecha: ${new Date().toLocaleDateString()}\n`;
-        msg += `🧾 Cuentas cobradas: ${ventas.length}\n`;
-        msg += `💵 TOTAL EN CAJA: ${fmt(totalVendido)}\n`;
-
-        window.open(`https://api.whatsapp.com/send?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(msg)}`, '_blank');
-      } else if (op === '2') {
-        if (confirm('¿Seguro que deseas reiniciar la caja a $0?')) {
-          localStorage.removeItem("salome_ventas");
-          notify('Caja reiniciada');
-        }
+    function reiniciarCaja() {
+      if (confirm('¿Seguro que deseas reiniciar el arqueo a $0?')) {
+        localStorage.removeItem("salome_ventas");
+        renderizarCierre();
+        toast('Caja reiniciada a $0');
       }
     }
 
-    function buscarPlatoPrompt() {
-      const q = prompt('Buscar plato:');
-      if (q) {
-        const f = MENU_ITEMS.filter(i => i.name.toLowerCase().includes(q.toLowerCase()));
-        renderProductGrid(f);
-      }
-    }
-
-    function reiniciarFiltro() {
-      filtrarCategoria('todos');
-    }
-
-    function aplicarDescuentoRapido() {
-      notify('Descuento del 10% aplicado al ticket');
-    }
-
-    function abrirEscanear() {
-      notify('Lector de código listo');
-    }
-
-    function accionRapidaDividir() {
-      notify('Función dividir cuenta activada');
-    }
-
-    function accionClienteNota() {
-      const n = prompt('Nota o nombre del cliente:');
-      if (n) notify(`Cliente asignado: ${n}`);
-    }
-
-    function guardarPersistencia() {
-      localStorage.setItem("salome_mesas", JSON.stringify(mesas));
-    }
-
-    // Inicialización
-    renderProductGrid(MENU_ITEMS);
-    actualizarTicket();
+    // Inicio
+    renderizarMenu();
+    renderizarMesas();
   </script>
 </body>
 </html>
