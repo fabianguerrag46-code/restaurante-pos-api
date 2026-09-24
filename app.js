@@ -5,7 +5,6 @@ const { Pool } = require('pg');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Configuración de la conexión a PostgreSQL en Render
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === 'production' || (process.env.DATABASE_URL && process.env.DATABASE_URL.includes('render.com'))
@@ -13,137 +12,109 @@ const pool = new Pool({
     : false
 });
 
-// Middlewares
 app.use(cors());
 app.use(express.json());
 
-// Crear tablas iniciales en PostgreSQL si aún no existen
 async function initDB() {
   try {
     await pool.query(`
-      CREATE TABLE IF NOT EXISTS productos (
-        id SERIAL PRIMARY KEY,
-        nombre VARCHAR(100) NOT NULL,
-        categoria VARCHAR(50),
-        precio NUMERIC(10, 2) NOT NULL,
-        stock INT DEFAULT 0,
-        creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      CREATE TABLE IF NOT EXISTS mesas (
+        id INT PRIMARY KEY,
+        items JSONB DEFAULT '[]'::jsonb,
+        actualizado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
-      CREATE TABLE IF NOT EXISTS pedidos (
+      CREATE TABLE IF NOT EXISTS ventas (
         id SERIAL PRIMARY KEY,
-        mesa VARCHAR(20) NOT NULL,
-        total NUMERIC(10, 2) NOT NULL,
-        estado VARCHAR(20) DEFAULT 'pendiente',
+        fecha VARCHAR(20),
+        hora VARCHAR(20),
+        mesa_id INT,
+        items JSONB NOT NULL,
+        subtotal NUMERIC(12, 2) NOT NULL,
+        tip NUMERIC(12, 2) NOT NULL,
+        total NUMERIC(12, 2) NOT NULL,
         creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
-    console.log('✅ Tablas verificadas en PostgreSQL con éxito.');
+
+    const checkMesas = await pool.query('SELECT COUNT(*) FROM mesas');
+    if (parseInt(checkMesas.rows[0].count) === 0) {
+      for (let i = 1; i <= 8; i++) {
+        await pool.query('INSERT INTO mesas (id, items) VALUES ($1, $2)', [i, '[]']);
+      }
+    }
+    console.log('✅ Base de datos configurada para Las Delicias de Salomé.');
   } catch (err) {
     console.error('❌ Error al inicializar tablas:', err.message);
   }
 }
 initDB();
 
-// 1. Pantalla visual principal (al abrir la URL en el navegador)
-app.get('/', async (req, res) => {
-  let dbStatus = 'Desconectada';
-  let totalProductos = 0;
-
+app.get('/api/mesas', async (req, res) => {
   try {
-    const dbTest = await pool.query('SELECT NOW()');
-    if (dbTest.rows.length > 0) {
-      dbStatus = 'Conectada exitosamente';
-    }
-    const countRes = await pool.query('SELECT COUNT(*) FROM productos');
-    totalProductos = countRes.rows[0].count;
-  } catch (err) {
-    dbStatus = 'Error de conexión: ' + err.message;
-  }
-
-  res.send(`
-    <!DOCTYPE html>
-    <html lang="es">
-    <head>
-      <meta charset="UTF-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <title>Restaurante POS - Conectado</title>
-      <style>
-        body { font-family: system-ui, sans-serif; background: #0f172a; color: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
-        .card { background: #1e293b; padding: 2rem; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); max-width: 520px; width: 90%; }
-        .badge { display: inline-block; background: #22c55e; color: #022c22; padding: 0.35rem 0.8rem; border-radius: 20px; font-weight: 700; font-size: 0.85rem; margin-bottom: 1rem; }
-        h1 { margin: 0 0 0.5rem; font-size: 1.6rem; color: #f1f5f9; }
-        p { color: #94a3b8; font-size: 0.95rem; margin-bottom: 1.5rem; }
-        .info-box { background: #0f172a; border-radius: 8px; padding: 1rem; border: 1px solid #334155; font-size: 0.9rem; line-height: 1.6; }
-        .info-box strong { color: #38bdf8; }
-        .endpoints { margin-top: 1.5rem; }
-        .endpoints a { color: #60a5fa; display: block; margin: 0.4rem 0; font-family: monospace; text-decoration: none; }
-        .endpoints a:hover { text-decoration: underline; }
-      </style>
-    </head>
-    <body>
-      <div class="card">
-        <span class="badge">● Sistema POS Online</span>
-        <h1>Restaurante POS API</h1>
-        <p>Servidor activo y conectado a la base de datos de Render.</p>
-        
-        <div class="info-box">
-          <div><strong>Estado de PostgreSQL:</strong> ${dbStatus}</div>
-          <div><strong>Total de productos registrados:</strong> ${totalProductos}</div>
-        </div>
-
-        <div class="endpoints">
-          <strong style="color: #cbd5e1;">Endpoints listos:</strong>
-          <a href="/api/status" target="_blank">GET /api/status</a>
-          <a href="/api/productos" target="_blank">GET /api/productos</a>
-        </div>
-      </div>
-    </body>
-    </html>
-  `);
-});
-
-// 2. Endpoint de salud / status
-app.get('/api/status', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT NOW() as hora_servidor');
-    res.json({
-      status: 'ok',
-      base_de_datos: 'conectada',
-      hora_servidor: result.rows[0].hora_servidor
-    });
-  } catch (err) {
-    res.status(500).json({
-      status: 'error',
-      base_de_datos: 'desconectada',
-      detalle: err.message
-    });
-  }
-});
-
-// 3. Obtener lista de productos
-app.get('/api/productos', async (req, res) => {
-  try {
-    const { rows } = await pool.query('SELECT * FROM productos ORDER BY id ASC');
+    const { rows } = await pool.query('SELECT id, items FROM mesas ORDER BY id ASC');
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ error: 'Error al consultar productos', detalle: err.message });
+    res.status(500).json({ error: err.message });
   }
 });
 
-// 4. Agregar un producto nuevo
-app.post('/api/productos', async (req, res) => {
-  const { nombre, categoria, precio, stock } = req.body;
-  if (!nombre || precio === undefined) {
-    return res.status(400).json({ error: 'Nombre y precio son obligatorios.' });
+app.post('/api/mesas', async (req, res) => {
+  const { id, items } = req.body;
+  try {
+    await pool.query(
+      `INSERT INTO mesas (id, items, actualizado_en)
+       VALUES ($1, $2, CURRENT_TIMESTAMP)
+       ON CONFLICT (id) DO UPDATE SET items = EXCLUDED.items, actualizado_en = CURRENT_TIMESTAMP`,
+      [id, JSON.stringify(items)]
+    );
+    res.json({ status: 'ok', mesaId: id });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
+});
 
+app.get('/api/ventas', async (req, res) => {
+  try {
+    const { rows } = await pool.query('SELECT * FROM ventas ORDER BY id DESC');
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/ventas', async (req, res) => {
+  const { fecha, hora, mesaId, items, subtotal, tip, total } = req.body;
   try {
     const query = `
-      INSERT INTO productos (nombre, categoria, precio, stock)
-      VALUES ($1, $2, $3, $4)
+      INSERT INTO ventas (fecha, hora, mesa_id, items, subtotal, tip, total)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *;
     `;
-    const values = [nombre, categoria || 'General', precio, stock || 0];
+    const values = [fecha, hora, mesaId, JSON.stringify(items), subtotal, tip, total];
     const { rows } = await pool.query(query, values);
-    res.status(201).json
+    res.status(201).json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/ventas', async (req, res) => {
+  try {
+    await pool.query('DELETE FROM ventas');
+    res.json({ status: 'ok', mensaje: 'Historial de ventas reiniciado' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/status', (req, res) => {
+  res.json({ status: 'ok', servicio: 'Las Delicias de Salomé POS' });
+});
+
+// Servir la carpeta pública si existe
+app.use(express.static('public'));
+
+app.listen(PORT, () => {
+  console.log(`Servidor POS activo en el puerto ${PORT}`);
+});
