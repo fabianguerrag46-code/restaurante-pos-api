@@ -41,7 +41,6 @@
       overflow: hidden;
     }
 
-    /* PANTALLA INICIAL DE ACCESO */
     #auth-screen {
       position: fixed;
       inset: 0;
@@ -88,7 +87,6 @@
       box-shadow: 0 2px 8px var(--primary-glow);
     }
 
-    /* HEADER */
     header {
       background: rgba(17, 24, 39, 0.95);
       padding: 12px 16px;
@@ -118,7 +116,6 @@
     .role-chip.mesero { background: rgba(249, 115, 22, 0.2); color: #fb923c; border: 1px solid rgba(249, 115, 22, 0.4); }
     .role-chip.cliente { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
 
-    /* VISTAS */
     .view-container {
       flex: 1;
       overflow-y: auto;
@@ -152,7 +149,6 @@
       outline: none;
     }
 
-    /* MESAS */
     .tables-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(130px, 1fr));
@@ -196,7 +192,6 @@
       margin-top: 6px;
     }
 
-    /* CATEGORÍAS */
     .cat-tabs {
       display: flex;
       gap: 8px;
@@ -221,7 +216,6 @@
       border-color: transparent;
     }
 
-    /* MENÚ */
     .menu-list { display: flex; flex-direction: column; gap: 12px; }
     .menu-card {
       background: var(--card);
@@ -291,7 +285,6 @@
       cursor: pointer;
     }
 
-    /* COMANDA */
     .bill-box {
       background: var(--card);
       border-radius: var(--radius);
@@ -342,7 +335,6 @@
     .btn-print { background: var(--primary-gradient); }
     .btn-danger { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
 
-    /* CIERRE */
     .kpi-mobile { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
     .kpi-card {
       background: var(--card);
@@ -353,7 +345,6 @@
     .kpi-label { font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
     .kpi-value { font-size: 1.28rem; font-weight: 900; margin-top: 6px; }
 
-    /* NAVEGACIÓN INFERIOR */
     nav {
       background: rgba(17, 24, 39, 0.92);
       border-top: 1px solid var(--border);
@@ -408,7 +399,6 @@
 </head>
 <body>
 
-  <!-- PANTALLA INICIAL DE ACCESO -->
   <div id="auth-screen">
     <div class="auth-card">
       <div style="font-size:2.8rem; margin-bottom:6px;">🥘</div>
@@ -444,7 +434,6 @@
     </div>
   </div>
 
-  <!-- HEADER -->
   <header>
     <div class="brand-title">
       <span>🥘 Las Delicias de Salomé</span>
@@ -457,7 +446,6 @@
 
   <div id="toast-msg"></div>
 
-  <!-- VISTA 1: MESAS -->
   <div class="view-container" id="view-mesas">
     <div class="section-title">
       <span>Salón Principal</span>
@@ -466,7 +454,6 @@
     <div class="tables-grid" id="tables-grid"></div>
   </div>
 
-  <!-- VISTA 2: MENÚ -->
   <div class="view-container active" id="view-menu">
     <input type="text" id="menu-search-input" class="search-box" placeholder="🔍 Buscar plato..." oninput="renderMenu()">
 
@@ -479,7 +466,6 @@
     <div class="menu-list" id="menu-list"></div>
   </div>
 
-  <!-- VISTA 3: COMANDA (SOLO ADMIN) -->
   <div class="view-container" id="view-comanda">
     <div class="bill-box">
       <h2 id="bill-mesa-title" style="font-size:1.2rem; font-weight:800;">Mesa 1</h2>
@@ -493,7 +479,6 @@
     </div>
   </div>
 
-  <!-- VISTA 4: CIERRE (SOLO ADMIN) -->
   <div class="view-container" id="view-cierre">
     <div class="section-title">Resumen de Caja Diario</div>
     <div class="kpi-mobile">
@@ -505,7 +490,6 @@
     <button class="btn-action btn-danger" onclick="reiniciarCajaDia()">Reiniciar Caja a $0</button>
   </div>
 
-  <!-- NAVEGACIÓN INFERIOR -->
   <nav id="bottom-nav">
     <button class="tab-btn" id="tab-nav-mesas" onclick="switchView('mesas')"><span>🪑</span>Mesas</button>
     <button class="tab-btn active" id="tab-nav-menu" onclick="switchView('menu')"><span>📋</span>Menú</button>
@@ -534,7 +518,7 @@
       setTimeout(() => { t.style.display = 'none'; }, 1800);
     }
 
-    // CATÁLOGO COMPLETO BASADO EN TUS FOTOS REALES
+    // RUTAS RELATIVAS ESTABLES PARA SERVIDOR EN LÍNEA
     const MENU_BASE = [
       { 
         id: 1, 
@@ -542,7 +526,7 @@
         price: 9000, 
         cat: "desayunos", 
         desc: "Porción de arroz blanco caliente con huevo frito de yema tierna", 
-        img: "imagenes/arroz_huevo.jpg"
+        img: "./imagenes/arroz_huevo.jpg"
       },
       { 
         id: 2, 
@@ -550,7 +534,7 @@
         price: 15000, 
         cat: "desayunos", 
         desc: "Huevos revueltos con salchicha, arepa, pandebono, queso campesino y chocolate", 
-        img: "imagenes/huevos_completos.jpg"
+        img: "./imagenes/huevos_completos.jpg"
       },
       { 
         id: 3, 
@@ -558,7 +542,7 @@
         price: 12000, 
         cat: "desayunos", 
         desc: "Huevos revueltos tiernos con jamón en sartén caliente y jugo de naranja", 
-        img: "imagenes/huevos_cazuela.jpg"
+        img: "./imagenes/huevos_cazuela.jpg"
       },
       { 
         id: 4, 
@@ -566,7 +550,7 @@
         price: 13000, 
         cat: "desayunos", 
         desc: "Huevos revueltos con salchicha en sartén, pan tostado y arepa blanca", 
-        img: "imagenes/huevos_madera.jpg"
+        img: "./imagenes/huevos_madera.jpg"
       },
       { 
         id: 5, 
@@ -574,7 +558,7 @@
         price: 16000, 
         cat: "desayunos", 
         desc: "Tamal artesanal en hoja de plátano con panes campesinos y taza de chocolate", 
-        img: "imagenes/tamal.jpg"
+        img: "./imagenes/tamal.jpg"
       },
       { 
         id: 6, 
@@ -582,7 +566,7 @@
         price: 14000, 
         cat: "desayunos", 
         desc: "Costilla de res suave en caldo criollo con papa pastusa y cilantro picado", 
-        img: "imagenes/caldo_costilla.jpg"
+        img: "./imagenes/caldo_costilla.jpg"
       },
       { 
         id: 7, 
@@ -590,7 +574,7 @@
         price: 16000, 
         cat: "desayunos", 
         desc: "Fríjoles refritos con arroz, huevo montado de yema tierna y pan campesino", 
-        img: "imagenes/calentado_paisa.jpg"
+        img: "./imagenes/calentado_paisa.jpg"
       },
       { 
         id: 8, 
@@ -598,7 +582,7 @@
         price: 22000, 
         cat: "desayunos", 
         desc: "Arroz, carne guisada en hogao, pechuga/chuleta, huevos fritos y patacón", 
-        img: "imagenes/monona.jpg"
+        img: "./imagenes/monona.jpg"
       },
       { 
         id: 9, 
@@ -606,7 +590,7 @@
         price: 8000, 
         cat: "desayunos", 
         desc: "Selección fresca de sandía, melón, papaya, piña dulce y fresa entera", 
-        img: "imagenes/frutas.jpg"
+        img: "./imagenes/frutas.jpg"
       },
       { 
         id: 10, 
@@ -614,7 +598,7 @@
         price: 7000, 
         cat: "bebidas", 
         desc: "Taza de chocolate santafereño espumoso acompañado de queso, pan y almojábana", 
-        img: "imagenes/chocolate.jpg"
+        img: "./imagenes/chocolate.jpg"
       },
       { 
         id: 11, 
@@ -622,7 +606,7 @@
         price: 3500, 
         cat: "bebidas", 
         desc: "Taza de café recién filtrado, aroma intenso y sabor tradicional", 
-        img: "imagenes/cafe.jpg"
+        img: "./imagenes/cafe.jpg"
       }
     ];
 
@@ -739,7 +723,7 @@
         card.className = 'menu-card';
         card.innerHTML = `
           <div class="menu-media">
-            <img src="${p.img}" alt="${p.name}">
+            <img src="${p.img}" alt="${p.name}" loading="lazy">
           </div>
           <div class="menu-details">
             <div class="menu-title">${p.name}</div>
