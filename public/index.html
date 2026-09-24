@@ -40,24 +40,25 @@
       overflow: hidden;
     }
 
-    /* PANTALLA INICIAL DE ACCESO */
+    /* PANTALLA INICIAL DE ACCESO Y REGISTRO */
     #modal-login {
       position: fixed;
       inset: 0;
-      background: rgba(15, 23, 42, 0.85);
-      backdrop-filter: blur(6px);
+      background: rgba(15, 23, 42, 0.88);
+      backdrop-filter: blur(8px);
       z-index: 500;
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 20px;
+      overflow-y: auto;
     }
     .auth-box {
       background: var(--surface);
       border-radius: 20px;
       padding: 26px;
       width: 100%;
-      max-width: 350px;
+      max-width: 360px;
       text-align: center;
       box-shadow: 0 20px 40px rgba(0,0,0,0.25);
     }
@@ -96,12 +97,21 @@
       z-index: 50;
     }
     .brand-logo {
-      font-size: 1.1rem;
+      font-size: 1.05rem;
       font-weight: 900;
       color: var(--primary);
       display: flex;
       align-items: center;
       gap: 6px;
+    }
+    .client-tag {
+      font-size: 0.76rem;
+      color: var(--muted);
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 130px;
     }
     .mesa-pill {
       background: #fff7ed;
@@ -127,15 +137,17 @@
 
     .search-input {
       width: 100%;
-      padding: 13px 16px;
+      padding: 12px 14px;
       border-radius: 12px;
       border: 1px solid var(--border);
       background: var(--surface);
       color: var(--text);
       font-size: 0.95rem;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
       outline: none;
     }
+    .search-input:focus { border-color: var(--primary); }
+
     .cat-scroll {
       display: flex;
       gap: 8px;
@@ -179,7 +191,6 @@
       overflow: hidden;
       flex-shrink: 0;
       background: #e2e8f0;
-      position: relative;
     }
     .card-img-wrap img {
       width: 100%;
@@ -272,7 +283,7 @@
 
     .btn-action-main {
       width: 100%;
-      padding: 14px;
+      padding: 13px;
       border-radius: 12px;
       border: none;
       font-size: 0.95rem;
@@ -312,7 +323,6 @@
       padding: 20px;
       box-shadow: 0 20px 40px rgba(0,0,0,0.4);
     }
-    /* El bloque que se exporta exactamente a PDF */
     #factura-print-area {
       background: #ffffff;
       padding: 16px 12px;
@@ -350,12 +360,12 @@
 
   <div id="toast-banner"></div>
 
-  <!-- PANTALLA INICIAL DE ACCESO -->
+  <!-- PANTALLA INICIAL DE ACCESO / LOGIN / REGISTRO CLIENTE -->
   <div id="modal-login">
     <div class="auth-box">
-      <div style="font-size:3rem; margin-bottom:6px;">🥘</div>
+      <div style="font-size:2.8rem; margin-bottom:4px;">🥘</div>
       <h2 style="font-weight:900;">Las Delicias de Salomé</h2>
-      <p style="color:var(--muted); font-size:0.85rem; margin-top:4px;">Selecciona tu rol de acceso</p>
+      <p style="color:var(--muted); font-size:0.85rem; margin-top:2px;">Ingresa para realizar tu pedido</p>
 
       <div class="role-tabs">
         <button class="role-btn active" id="tab-rol-cli" onclick="elegirRolLogin('cliente')">👤 Cliente</button>
@@ -363,15 +373,46 @@
         <button class="role-btn" id="tab-rol-adm" onclick="elegirRolLogin('admin')">🔑 Admin</button>
       </div>
 
+      <!-- SECCIÓN CLIENTE (LOGIN / REGISTRO) -->
       <div id="auth-sec-cliente">
-        <label style="font-size:0.75rem; color:var(--muted); font-weight:700; display:block; text-align:left; margin-bottom:6px;">SELECCIONA TU MESA:</label>
-        <select id="auth-mesa-select" class="search-input" style="font-weight:700;">
-          <option value="1">Mesa 1</option><option value="2">Mesa 2</option><option value="3">Mesa 3</option><option value="4">Mesa 4</option>
-          <option value="5">Mesa 5</option><option value="6">Mesa 6</option><option value="7">Mesa 7</option><option value="8">Mesa 8</option>
-        </select>
-        <button class="btn-action-main btn-green" onclick="ingresarCliente()">Ver Menú y Ordenar</button>
+        <!-- Paso 1: Identificación por Celular -->
+        <div id="cli-step-phone">
+          <label style="font-size:0.75rem; color:var(--muted); font-weight:700; display:block; text-align:left; margin-bottom:4px;">NÚMERO DE TELÉFONO / CELULAR:</label>
+          <input type="tel" id="cli-phone-in" class="search-input" placeholder="Ej: 3001234567" inputmode="numeric" maxlength="10">
+          <button class="btn-action-main btn-green" onclick="verificarClienteExiste()">Continuar</button>
+        </div>
+
+        <!-- Paso 2: Registro de nuevo usuario (si no existe) -->
+        <div id="cli-step-register" style="display:none; text-align:left;">
+          <div style="background:#f1f5f9; padding:8px 12px; border-radius:10px; font-size:0.8rem; color:var(--primary); font-weight:700; margin-bottom:10px;">
+            ✨ ¡Usuario nuevo! Completa tu registro:
+          </div>
+          <label style="font-size:0.75rem; color:var(--muted); font-weight:700; display:block; margin-bottom:4px;">NOMBRE COMPLETO:</label>
+          <input type="text" id="reg-name-in" class="search-input" placeholder="Ej: Juan Pérez">
+          
+          <label style="font-size:0.75rem; color:var(--muted); font-weight:700; display:block; margin-bottom:4px;">CORREO O IDENTIFICACIÓN (OPCIONAL):</label>
+          <input type="text" id="reg-extra-in" class="search-input" placeholder="Ej: juan@email.com o C.C.">
+
+          <button class="btn-action-main btn-green" onclick="guardarNuevoCliente()">Guardar y Continuar</button>
+          <button onclick="volverAPasoTelefono()" style="width:100%; background:none; border:none; color:var(--muted); font-size:0.78rem; font-weight:700; margin-top:8px; cursor:pointer;">← Cambiar número</button>
+        </div>
+
+        <!-- Paso 3: Selección de Mesa (cliente ya validado) -->
+        <div id="cli-step-mesa" style="display:none; text-align:left;">
+          <div style="margin-bottom:12px; font-size:0.9rem;">
+            ¡Hola, <strong id="cli-saludo-nombre" style="color:var(--primary);">Amigo</strong>! 👋
+          </div>
+          <label style="font-size:0.75rem; color:var(--muted); font-weight:700; display:block; margin-bottom:4px;">SELECCIONA TU MESA ACTUAL:</label>
+          <select id="auth-mesa-select" class="search-input" style="font-weight:700;">
+            <option value="1">Mesa 1</option><option value="2">Mesa 2</option><option value="3">Mesa 3</option><option value="4">Mesa 4</option>
+            <option value="5">Mesa 5</option><option value="6">Mesa 6</option><option value="7">Mesa 7</option><option value="8">Mesa 8</option>
+          </select>
+          <button class="btn-action-main btn-green" onclick="completarIngresoCliente()">Ver Menú y Ordenar</button>
+          <button onclick="volverAPasoTelefono()" style="width:100%; background:none; border:none; color:var(--muted); font-size:0.78rem; font-weight:700; margin-top:8px; cursor:pointer;">Cerrar sesión / Otro cliente</button>
+        </div>
       </div>
 
+      <!-- SECCIÓN STAFF (MESERO / ADMIN) -->
       <div id="auth-sec-staff" style="display:none;">
         <label style="font-size:0.75rem; color:var(--muted); font-weight:700; display:block; text-align:left; margin-bottom:6px;">INGRESA EL PIN:</label>
         <input type="password" id="auth-pin-input" class="search-input" placeholder="••••" maxlength="4" inputmode="numeric" style="text-align:center; font-size:1.6rem; letter-spacing:6px;">
@@ -382,8 +423,9 @@
 
   <!-- HEADER -->
   <header>
-    <div class="brand-logo">
-      <span>🥘 Las Delicias</span>
+    <div>
+      <div class="brand-logo">🥘 Las Delicias</div>
+      <div class="client-tag" id="header-client-name">Cliente: Invitado</div>
     </div>
     <div class="mesa-pill" id="header-mesa-indicator" onclick="cambiarVista('mesas')">
       Mesa 1
@@ -478,6 +520,7 @@
           <div class="fac-sub" style="margin-top:6px;"><strong id="fac-txt-numero">FACTURA: FAC-001</strong></div>
           <div class="fac-sub" id="fac-txt-fechahora">2026-09-24 12:00 PM</div>
           <div class="fac-sub" id="fac-txt-mesa">MESA: 1</div>
+          <div class="fac-sub" id="fac-txt-cliente" style="font-weight:700; color:#0f172a;">CLIENTE: General</div>
         </div>
 
         <table class="fac-table">
@@ -558,6 +601,10 @@
     let mesaActivaId = 1;
     let facturaMemoria = null;
 
+    // Cliente actual y clientes almacenados
+    let clienteActual = JSON.parse(localStorage.getItem("salome_cliente_activo") || "null") || { nombre: "Consumidor Final", telefono: "" };
+    let clientesBD = JSON.parse(localStorage.getItem("salome_clientes_bd") || "[]");
+
     let mesas = JSON.parse(localStorage.getItem("salome_mesas") || "null") || 
                 Array.from({ length: 8 }, (_, i) => ({ id: i + 1, items: [] }));
 
@@ -585,7 +632,7 @@
       { id: 11, name: "Café Tinto Campesino", price: 3500, cat: "bebidas", desc: "Taza de café recién filtrado, aroma intenso y sabor tradicional", img: "imagenes/cafe.jpg" }
     ];
 
-    /* CONTROL DE ROLES Y LOGIN */
+    /* CONTROL DE ROLES Y REGISTRO / LOGIN */
     function elegirRolLogin(r) {
       rolModalElegido = r;
       ['cli', 'mes', 'adm'].forEach(k => document.getElementById(`tab-rol-${k}`).classList.remove('active'));
@@ -601,21 +648,88 @@
       }
     }
 
-    function ingresarCliente() {
+    /* LÓGICA DE REGISTRO / LOGIN DE CLIENTE */
+    let tempTelefono = '';
+
+    function verificarClienteExiste() {
+      const tel = document.getElementById('cli-phone-in').value.trim();
+      if (!tel || tel.length < 7) {
+        return alert('Por favor ingresa un número de teléfono válido.');
+      }
+      tempTelefono = tel;
+
+      // Buscar si el cliente ya existe en la base de datos
+      const encontrado = clientesBD.find(c => c.telefono === tel);
+
+      if (encontrado) {
+        clienteActual = encontrado;
+        localStorage.setItem("salome_cliente_activo", JSON.stringify(clienteActual));
+        mostrarPasoMesa(clienteActual.nombre);
+      } else {
+        // Es un cliente nuevo: mostrar formulario de registro
+        document.getElementById('cli-step-phone').style.display = 'none';
+        document.getElementById('cli-step-register').style.display = 'block';
+        document.getElementById('reg-name-in').value = '';
+      }
+    }
+
+    function guardarNuevoCliente() {
+      const nombre = document.getElementById('reg-name-in').value.trim();
+      const extra = document.getElementById('reg-extra-in').value.trim();
+
+      if (!nombre) {
+        return alert('Por favor ingresa tu nombre completo.');
+      }
+
+      const nuevoCliente = {
+        telefono: tempTelefono,
+        nombre: nombre,
+        extra: extra,
+        fechaRegistro: new Date().toLocaleDateString()
+      };
+
+      // Guardar en la base de datos local
+      clientesBD.push(nuevoCliente);
+      localStorage.setItem("salome_clientes_bd", JSON.stringify(clientesBD));
+
+      // Asignar como cliente activo
+      clienteActual = nuevoCliente;
+      localStorage.setItem("salome_cliente_activo", JSON.stringify(clienteActual));
+
+      notify('¡Registro guardado con éxito!');
+      mostrarPasoMesa(clienteActual.nombre);
+    }
+
+    function mostrarPasoMesa(nombre) {
+      document.getElementById('cli-step-phone').style.display = 'none';
+      document.getElementById('cli-step-register').style.display = 'none';
+      document.getElementById('cli-step-mesa').style.display = 'block';
+      document.getElementById('cli-saludo-nombre').innerText = nombre;
+    }
+
+    function volverAPasoTelefono() {
+      document.getElementById('cli-step-register').style.display = 'none';
+      document.getElementById('cli-step-mesa').style.display = 'none';
+      document.getElementById('cli-step-phone').style.display = 'block';
+    }
+
+    function completarIngresoCliente() {
       mesaActivaId = Number(document.getElementById('auth-mesa-select').value);
       usuarioRol = 'cliente';
       activarPermisosRol();
       document.getElementById('modal-login').style.display = 'none';
       cambiarVista('menu');
-      notify(`Mesa ${mesaActivaId} activa`);
+      notify(`Bienvenido, ${clienteActual.nombre}`);
     }
 
     function ingresarStaff() {
       const pin = document.getElementById('auth-pin-input').value.trim();
       if (rolModalElegido === 'mesero' && (pin === PIN_MESERO || pin === PIN_ADMIN)) {
         usuarioRol = 'mesero';
+        clienteActual = { nombre: "Mesero de Turno", telefono: "Personal" };
       } else if (rolModalElegido === 'admin' && pin === PIN_ADMIN) {
         usuarioRol = 'admin';
+        clienteActual = { nombre: "Administrador", telefono: "Gerencia" };
       } else {
         return alert('PIN incorrecto.');
       }
@@ -626,10 +740,12 @@
 
     function cerrarSesionApp() {
       document.getElementById('modal-login').style.display = 'flex';
+      volverAPasoTelefono();
     }
 
     function activarPermisosRol() {
       document.getElementById('header-mesa-indicator').innerText = `Mesa ${mesaActivaId}`;
+      document.getElementById('header-client-name').innerText = `Cliente: ${clienteActual.nombre}`;
       const btnCierre = document.getElementById('tab-btn-cierre');
       const btnCobrar = document.getElementById('btn-cobrar-accion');
 
@@ -847,6 +963,8 @@
       facturaMemoria = {
         orden: `FAC-${consecutivo}`,
         mesa: mesaActivaId,
+        cliente: clienteActual.nombre,
+        telefono: clienteActual.telefono,
         items: [...m.items],
         total: m.items.reduce((a, b) => a + (b.price * b.qty), 0),
         fecha: ahora.toLocaleDateString(),
@@ -856,6 +974,7 @@
       document.getElementById('fac-txt-numero').innerText = `FACTURA: ${facturaMemoria.orden}`;
       document.getElementById('fac-txt-fechahora').innerText = `${facturaMemoria.fecha} - ${facturaMemoria.hora}`;
       document.getElementById('fac-txt-mesa').innerText = `MESA: ${facturaMemoria.mesa}`;
+      document.getElementById('fac-txt-cliente').innerText = `CLIENTE: ${facturaMemoria.cliente} (${facturaMemoria.telefono || 'Sin tel'})`;
 
       const tbody = document.getElementById('fac-table-body');
       tbody.innerHTML = facturaMemoria.items.map(it => `
@@ -893,6 +1012,7 @@
       ventas.push({
         id: nuevoId,
         mesa: mesaActivaId,
+        cliente: clienteActual.nombre,
         items: m.items.map(i => `${i.qty}x ${i.name} (${fmt(i.price)})`).join(', '),
         total: total,
         fecha: ahora.toLocaleDateString(),
@@ -933,6 +1053,7 @@
       let msg = `*🧾 FACTURA DE VENTA - LAS DELICIAS DE SALOMÉ*\n`;
       msg += `NIT: 901.458.723-1\n`;
       msg += `${facturaMemoria.orden}\n`;
+      msg += `Cliente: ${facturaMemoria.cliente}\n`;
       msg += `Mesa: ${facturaMemoria.mesa} | ${facturaMemoria.fecha} (${facturaMemoria.hora})\n`;
       msg += `------------------------------------\n`;
       msg += `*DETALLE DE CONSUMO:*\n`;
@@ -974,7 +1095,7 @@
       msg += `💵 TOTAL EN CAJA: ${fmt(total)}\n`;
       msg += `------------------------------------\n`;
       ventas.forEach(v => {
-        msg += `• Orden #${v.id} (Mesa ${v.mesa}): ${fmt(v.total)} - ${v.hora}\n`;
+        msg += `• Orden #${v.id} (Mesa ${v.mesa}) [${v.cliente || 'Cliente'}]: ${fmt(v.total)} - ${v.hora}\n`;
       });
 
       window.open(`https://api.whatsapp.com/send?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(msg)}`, '_blank');
@@ -989,6 +1110,7 @@
         "Fecha": v.fecha,
         "Hora": v.hora,
         "Mesa": `Mesa ${v.mesa}`,
+        "Cliente": v.cliente || "Consumidor Final",
         "Detalle de Platos": v.items,
         "Total ($)": Number(v.total)
       }));
@@ -999,12 +1121,13 @@
         "Fecha": "",
         "Hora": "",
         "Mesa": "",
+        "Cliente": "",
         "Detalle de Platos": "ARQUEO TOTAL DEL DÍA",
         "Total ($)": total
       });
 
       const ws = XLSX.utils.json_to_sheet(rows);
-      ws['!cols'] = [{ wch: 10 }, { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 45 }, { wch: 16 }];
+      ws['!cols'] = [{ wch: 10 }, { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 22 }, { wch: 45 }, { wch: 16 }];
 
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Ventas_Diarias");
